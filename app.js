@@ -208,11 +208,38 @@ async function loadMapa() {
   });
   $('#selUbic').innerHTML = '<option value="">— Sin ubicación —</option>' +
     ubicaciones.map(u => `<option value="${esc(u.codigo)}">${esc(u.codigo)} — ${esc(u.etiqueta)}</option>`).join('');
+  if (vista === '3d') ponerVista('3d');
 }
+
+/* ---------- Vista 3D ---------- */
+let vista = '2d';
+try { vista = localStorage.getItem('seba_vista') || '2d'; } catch (e) {}
+async function ponerVista(v) {
+  vista = v;
+  try { localStorage.setItem('seba_vista', v); } catch (e) {}
+  document.querySelectorAll('.vista-toggle button').forEach(b => b.classList.toggle('on', b.dataset.vista === v));
+  $('#grid').hidden = v === '3d';
+  $('#plano3d').hidden = v !== '3d';
+  if (v !== '3d') { if (window.Mapa3D) Mapa3D.ocultar(); return; }
+  const carga = $('#plano3d .p3d-carga');
+  try {
+    await Mapa3D.mostrar($('#plano3d'), ubicaciones, {selected, onSelect: c => showDetail(c, false)});
+    carga.hidden = true;
+  } catch (err) {
+    carga.hidden = false;
+    carga.textContent = err.message;
+  }
+}
+document.querySelectorAll('.vista-toggle button').forEach(b => b.onclick = () => ponerVista(b.dataset.vista));
+document.querySelectorAll('[data-p3d]').forEach(b => b.onclick = () => {
+  const girando = Mapa3D.accion(b.dataset.p3d);
+  $('[data-p3d="girar"]').classList.toggle('on', !!girando);
+});
 
 async function showDetail(codigo, scroll = true) {
   selected = codigo;
   document.querySelectorAll('.shelf').forEach(e => e.classList.toggle('sel', e.dataset.codigo === codigo));
+  if (window.Mapa3D) Mapa3D.seleccionar(codigo);
   const u = await api('ubicacion', {codigo});
   const det = $('#detail');
   det.innerHTML = `

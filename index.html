@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#0f172a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Almacén MT">
@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest?v=5">
 <link rel="icon" href="app-icon-192.png">
 <link rel="apple-touch-icon" href="app-apple-touch-icon.png">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 
@@ -43,7 +43,7 @@
 <!-- App -->
 <section id="pantallaApp" class="pantalla" hidden>
   <header class="top">
-    <div class="brand"><img src="logo-mt-192.png" alt="" class="brand-img"> Almacén MT</div>
+    <div class="brand"><img src="transpaleta.png" alt="" class="brand-trans"> Almacén MT</div>
     <nav class="tabs">
       <button data-view="mapa" class="active">Mapa</button>
       <button data-view="productos">Productos</button>
@@ -61,11 +61,26 @@
         <div id="results"></div>
       </div>
       <div class="map-layout">
+        <div class="plan-col">
+        <div class="vista-toggle" role="group" aria-label="Vista del mapa">
+          <button type="button" data-vista="2d" class="on">Plano 2D</button>
+          <button type="button" data-vista="3d">Vista 3D</button>
+        </div>
+        <div class="plano3d" id="plano3d" hidden>
+          <div class="p3d-carga">Cargando vista 3D…</div>
+          <div class="p3d-ayuda">Arrastra para girar · pellizca para acercar · toca un palé</div>
+          <div class="p3d-btns">
+            <button type="button" data-p3d="girar">Girar solo</button>
+            <button type="button" data-p3d="arriba">Vista de arriba</button>
+            <button type="button" data-p3d="centrar">Centrar</button>
+          </div>
+        </div>
         <div class="plan" id="grid">
           <div class="zone" style="left:.5%;top:1%;width:16%">PASILLO IZQUIERDO</div>
           <div class="zone" style="left:19%;top:1%;width:80%">FONDO DEL ALMACÉN</div>
           <div class="zone" style="left:19%;top:21%;width:80%">ESTANTERÍAS · CARA DELANTERA Y TRASERA</div>
           <span class="entrada">ENTRADA</span>
+        </div>
         </div>
         <aside class="detail" id="detail">
           <p class="muted">Toca un palé o estantería para ver y gestionar sus productos.</p>
@@ -162,6 +177,8 @@
 </dialog>
 
 <script src="config.js"></script>
-<script src="app.js"></script>
+<script src="mapa3d.js?v=2"></script>
+<script src="app.js?v=9"></script>
+<script src="perrito.js?v=1"></script>
 </body>
 </html>
