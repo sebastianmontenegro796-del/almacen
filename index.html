@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Almacén MT">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Almacén MT</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Buscando servidor / sin conexión -->
+<section id="pantallaEstado" class="pantalla centro">
+  <div class="card-centro">
+    <img class="logo-img" src="icon-512.png" alt="MT Montenegro">
+    <h1>Almacén MT</h1>
+    <p id="estadoTexto" class="muted">Buscando el servidor…</p>
+    <div id="spinner" class="spinner"></div>
+    <button id="btnReintentar" class="btn primary" hidden>Reintentar</button>
+  </div>
+</section>
+
+<!-- Inicio de sesión -->
+<section id="pantallaLogin" class="pantalla centro" hidden>
+  <form id="formLogin" class="card-centro" autocomplete="on">
+    <img class="logo-img" src="icon-512.png" alt="MT Montenegro">
+    <h1>Almacén MT</h1>
+    <p class="muted">Inicia sesión una vez; la app lo recordará.</p>
+    <label>Usuario<input name="usuario" required autocomplete="username" autocapitalize="none"></label>
+    <label>Contraseña<input name="clave" type="password" required autocomplete="current-password"></label>
+    <p class="error" id="errLogin"></p>
+    <button class="btn primary ancho" type="submit">Entrar</button>
+  </form>
+</section>
+
+<!-- App -->
+<section id="pantallaApp" class="pantalla" hidden>
+  <header class="top">
+    <div class="brand"><img src="icon-192.png" alt="" class="brand-img"> Almacén MT</div>
+    <nav class="tabs">
+      <button data-view="mapa" class="active">Mapa</button>
+      <button data-view="productos">Productos</button>
+      <button data-view="movimientos">Movimientos</button>
+    </nav>
+    <button class="btn sm" id="btnSalir">Salir</button>
+  </header>
+
+  <main>
+    <section class="stats" id="stats"></section>
+
+    <section id="view-mapa" class="view active">
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="Buscar producto, referencia o ubicación…" autocomplete="off">
+        <div id="results"></div>
+      </div>
+      <div class="map-layout">
+        <div class="plan" id="grid">
+          <div class="zone" style="left:.5%;top:1%;width:16%">PASILLO IZQUIERDO</div>
+          <div class="zone" style="left:19%;top:1%;width:80%">FONDO DEL ALMACÉN</div>
+          <div class="zone" style="left:19%;top:21%;width:80%">ESTANTERÍAS · CARA DELANTERA Y TRASERA</div>
+          <span class="entrada">ENTRADA</span>
+        </div>
+        <aside class="detail" id="detail">
+          <p class="muted">Toca un palé o estantería para ver y gestionar sus productos.</p>
+        </aside>
+      </div>
+      <p class="legend"><span class="dot vacio"></span> Vacío <span class="dot ocupado"></span> Con productos <span class="dot alerta"></span> Stock bajo</p>
+    </section>
+
+    <section id="view-productos" class="view">
+      <div class="toolbar">
+        <input id="filtro" type="search" placeholder="Filtrar productos…">
+        <button class="btn primary" id="btnNuevo">+ Nuevo</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Producto</th><th>Cantidad</th><th>Ubic.</th><th></th></tr></thead>
+          <tbody id="tablaProductos"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="view-movimientos" class="view">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Producto</th><th>Tipo</th><th>Cant.</th><th>Ubic.</th><th>Nota</th></tr></thead>
+          <tbody id="tablaMov"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</section>
+
+<!-- Modal producto -->
+<dialog id="dlgProducto">
+  <form id="formProducto" method="dialog">
+    <h2 id="dlgTitulo">Producto</h2>
+    <input type="hidden" name="id">
+    <label>Nombre *<input name="nombre" required maxlength="150"></label>
+    <div class="row">
+      <label>Referencia<input name="referencia" maxlength="60"></label>
+      <label>Ubicación<select name="ubicacion" id="selUbic"></select></label>
+    </div>
+    <div class="row">
+      <label>Cantidad<input name="cantidad" type="number" step="0.01" min="0" value="0" inputmode="decimal"></label>
+      <label>Unidad<input name="unidad" value="uds" maxlength="20"></label>
+      <label>Stock mínimo<input name="stock_minimo" type="number" step="0.01" min="0" value="0" inputmode="decimal"></label>
+    </div>
+    <label>Notas<textarea name="notas" rows="2"></textarea></label>
+    <p class="error" id="errProducto"></p>
+    <div class="actions">
+      <button type="button" class="btn danger" id="btnEliminar">Eliminar</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn" data-close>Cancelar</button>
+      <button type="submit" class="btn primary">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Modal movimiento -->
+<dialog id="dlgMov">
+  <form id="formMov" method="dialog">
+    <h2 id="movTitulo">Movimiento</h2>
+    <input type="hidden" name="id"><input type="hidden" name="tipo">
+    <p class="muted" id="movInfo"></p>
+    <label>Cantidad<input name="cantidad" type="number" step="0.01" min="0.01" required inputmode="decimal"></label>
+    <label>Nota<input name="nota" maxlength="200" placeholder="Opcional (pedido, cliente…)"></label>
+    <p class="error" id="errMov"></p>
+    <div class="actions">
+      <span class="spacer"></span>
+      <button type="button" class="btn" data-close>Cancelar</button>
+      <button type="submit" class="btn primary">Confirmar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Modal renombrar ubicación -->
+<dialog id="dlgUbic">
+  <form id="formUbic" method="dialog">
+    <h2>Renombrar ubicación</h2>
+    <input type="hidden" name="codigo">
+    <label>Nombre<input name="etiqueta" required maxlength="100"></label>
+    <div class="actions">
+      <span class="spacer"></span>
+      <button type="button" class="btn" data-close>Cancelar</button>
+      <button type="submit" class="btn primary">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
