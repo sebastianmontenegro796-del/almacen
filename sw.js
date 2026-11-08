@@ -1,8 +1,8 @@
 ﻿// Service worker: guarda la interfaz para que la app abra rápido y sin conexión.
 // Los datos siempre se piden al servidor (no se guardan aquí).
-const CACHE = 'seba-almacen-v4';
-const SHELL = ['./', 'index.html', 'app.js', 'style.css', 'config.js', 'manifest.webmanifest',
-               'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'logo-mt-192.png', 'logo-mt-512.png'];
+const CACHE = 'seba-almacen-v5';
+const SHELL = ['./', 'index.html', 'app.js', 'style.css', 'config.js',
+               'app-icon-192.png', 'app-icon-512.png', 'app-apple-touch-icon.png', 'logo-mt-192.png', 'logo-mt-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
