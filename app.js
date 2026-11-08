@@ -12,6 +12,32 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const fmt = n => { const v = Number(n); return Number.isInteger(v) ? String(v) : v.toLocaleString('es-ES', {maximumFractionDigits: 2}); };
 const isLow = p => Number(p.stock_minimo) > 0 && Number(p.cantidad) <= Number(p.stock_minimo);
 
+/* ---------- Unidades (Palé, Medio palé, Fila, Caja, Unidad) ---------- */
+const UNIDADES = {'Palé': ['palé', 'palés'], 'Medio palé': ['medio palé', 'medios palés'],
+                  'Fila': ['fila', 'filas'], 'Caja': ['caja', 'cajas'], 'Unidad': ['unidad', 'unidades']};
+const ALIAS_UD = {pale: 'Palé', pales: 'Palé', palet: 'Palé', palets: 'Palé',
+                  'medio pale': 'Medio palé', 'medios pales': 'Medio palé', 'medio palet': 'Medio palé',
+                  fila: 'Fila', filas: 'Fila', caja: 'Caja', cajas: 'Caja',
+                  unidad: 'Unidad', unidades: 'Unidad', ud: 'Unidad', uds: 'Unidad', und: 'Unidad', u: 'Unidad'};
+// Devuelve una de las 5 unidades, o null si es un valor antiguo que no encaja (p. ej. "tarros")
+const unidadNorm = u => ALIAS_UD[String(u ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()] || null;
+// "2 palés", "1 medio palé", "12 cajas"… (los valores antiguos se muestran tal cual)
+function cantUd(n, u) {
+  const c = unidadNorm(u);
+  if (!c) return `${fmt(n)} ${u || ''}`.trim();
+  return `${fmt(n)} ${UNIDADES[c][Math.abs(Number(n)) === 1 ? 0 : 1]}`;
+}
+// Selecciona la unidad en el desplegable; si es un valor antiguo, lo conserva como opción extra
+function ponerUnidad(sel, u) {
+  sel.querySelectorAll('option[data-antigua]').forEach(o => o.remove());
+  const c = u ? unidadNorm(u) : 'Unidad';
+  if (c) { sel.value = c; return; }
+  const o = new Option(`${u} (actual)`, u);
+  o.dataset.antigua = '1';
+  sel.add(o);
+  sel.value = u;
+}
+
 const ls = {
   get: k => { try { return localStorage.getItem(k); } catch { return null; } },
   set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} },
@@ -199,7 +225,7 @@ async function showDetail(codigo, scroll = true) {
     ${u.productos.map(p => `
       <div class="item">
         <div class="name">${esc(p.nombre)}</div>
-        <div class="qty ${isLow(p) ? 'low' : ''}">${fmt(p.cantidad)} ${esc(p.unidad)}${p.referencia ? ' · Ref ' + esc(p.referencia) : ''}${isLow(p) ? ' · stock bajo' : ''}</div>
+        <div class="qty ${isLow(p) ? 'low' : ''}">${esc(cantUd(p.cantidad, p.unidad))}${p.referencia ? ' · Ref ' + esc(p.referencia) : ''}${isLow(p) ? ' · stock bajo' : ''}</div>
         ${p.notas ? `<div class="muted" style="font-size:.85rem">${esc(p.notas)}</div>` : ''}
         <div class="btns">
           <button class="btn sm ok" data-mov="ENTRADA" data-id="${p.id}">+ Entrada</button>
@@ -235,7 +261,7 @@ $('#search').addEventListener('input', () => {
     if (!lista.length && !ubicMatch.length) { box.innerHTML = '<div class="muted" style="padding:8px 4px">Sin resultados</div>'; return; }
     box.innerHTML =
       ubicMatch.slice(0, 5).map(u => `<div class="res" data-go="${esc(u.codigo)}"><strong>${esc(u.codigo)}</strong> — ${esc(u.etiqueta)}</div>`).join('') +
-      lista.slice(0, 15).map(p => `<div class="res" data-go="${esc(p.ubicacion || '')}"><strong>${esc(p.ubicacion || 'Sin ubicación')}</strong> — ${esc(p.nombre)} <span class="muted">(${fmt(p.cantidad)} ${esc(p.unidad)})</span></div>`).join('');
+      lista.slice(0, 15).map(p => `<div class="res" data-go="${esc(p.ubicacion || '')}"><strong>${esc(p.ubicacion || 'Sin ubicación')}</strong> — ${esc(p.nombre)} <span class="muted">(${esc(cantUd(p.cantidad, p.unidad))})</span></div>`).join('');
   }, 250);
 });
 $('#results').addEventListener('click', e => {
@@ -256,7 +282,7 @@ async function loadProductos() {
   $('#tablaProductos').innerHTML = listaProductos.length ? listaProductos.map(p => `
     <tr>
       <td class="wrap">${esc(p.nombre)}${p.referencia ? `<br><span class="muted" style="font-size:.8rem">Ref ${esc(p.referencia)}</span>` : ''}</td>
-      <td class="${isLow(p) ? 'low' : ''}">${fmt(p.cantidad)} ${esc(p.unidad)}</td>
+      <td class="${isLow(p) ? 'low' : ''}">${esc(cantUd(p.cantidad, p.unidad))}</td>
       <td>${p.ubicacion ? `<span class="tag">${esc(p.ubicacion)}</span>` : '<span class="muted">—</span>'}</td>
       <td style="text-align:right">
         <button class="btn sm ok" data-mov="ENTRADA" data-id="${p.id}">+</button>
@@ -282,7 +308,7 @@ async function loadMovimientos() {
       <td>${new Date(m.fecha.replace(' ', 'T')).toLocaleString('es-ES', {dateStyle: 'short', timeStyle: 'short'})}</td>
       <td class="wrap">${esc(m.nombre || '(eliminado)')}</td>
       <td><span class="tag ${esc(m.tipo)}">${esc(m.tipo)}</span></td>
-      <td>${sign}${fmt(m.cantidad)} ${esc(m.unidad || '')}</td>
+      <td>${sign}${esc(cantUd(m.cantidad, m.unidad))}</td>
       <td>${ub}</td>
       <td class="wrap">${esc(m.nota || '')}</td></tr>`;
   }).join('') : '<tr><td colspan="6" class="muted">Sin movimientos todavía.</td></tr>';
@@ -297,9 +323,10 @@ function openProducto(p = {}) {
   $('#errProducto').textContent = '';
   $('#dlgTitulo').textContent = p.id ? 'Editar producto' : 'Nuevo producto';
   $('#btnEliminar').style.display = p.id ? '' : 'none';
-  for (const k of ['id', 'nombre', 'referencia', 'cantidad', 'unidad', 'stock_minimo', 'ubicacion', 'notas']) {
+  for (const k of ['id', 'nombre', 'referencia', 'cantidad', 'stock_minimo', 'ubicacion', 'notas']) {
     if (p[k] !== undefined && p[k] !== null) fP.elements[k].value = (k === 'cantidad' || k === 'stock_minimo') ? Number(p[k]) : p[k];
   }
+  ponerUnidad(fP.elements.unidad, p.unidad);
   if (!p.id) fP.elements.id.value = '';
   $('#dlgProducto').showModal();
 }
@@ -330,7 +357,7 @@ function openMov(p, tipo) {
   fM.elements.id.value = p.id;
   fM.elements.tipo.value = tipo;
   $('#movTitulo').textContent = (tipo === 'ENTRADA' ? 'Entrada de ' : 'Salida de ') + p.nombre;
-  $('#movInfo').textContent = `Stock actual: ${fmt(p.cantidad)} ${p.unidad}${p.ubicacion ? ' · ' + p.ubicacion : ''}`;
+  $('#movInfo').textContent = `Stock actual: ${cantUd(p.cantidad, p.unidad)}${p.ubicacion ? ' · ' + p.ubicacion : ''}`;
   $('#dlgMov').showModal();
 }
 fM.addEventListener('submit', async e => {
