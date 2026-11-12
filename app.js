@@ -193,9 +193,31 @@ async function loadStats() {
 }
 
 /* ---------- Mapa ---------- */
+// Dibuja en el plano 2D la forma real de la nave y los muebles (almacen-layout.js, en metros)
+function decoPlano(grid) {
+  const lay = window.ALMACEN_LAYOUT;
+  if (!lay || grid.dataset.deco) return;
+  grid.dataset.deco = '1';
+  const {ancho: W, fondo: D} = lay.nave;
+  grid.style.aspectRatio = `${W} / ${D}`;
+  grid.classList.add('real');
+  grid.querySelectorAll('.zone').forEach(z => z.remove());
+  for (const m of lay.modulos) {
+    const largo = m.tipo === 'zona' ? m.ancho : m.huecos * m.ancho, fondo = m.tipo === 'pale' ? 1.2 : m.fondo;
+    const girado = m.rot % 180 !== 0, w = girado ? fondo : largo, d = girado ? largo : fondo;
+    const e = document.createElement('div');
+    e.className = 'mueble ' + m.tipo;
+    Object.assign(e.style, {left: (m.x - w / 2) / W * 100 + '%', top: (m.z - d / 2) / D * 100 + '%', width: w / W * 100 + '%', height: d / D * 100 + '%'});
+    if (m.tipo === 'zona') e.textContent = m.nombre;
+    if (m.tipo === 'nevera') e.textContent = 'Nevera';
+    grid.prepend(e);
+  }
+}
+
 async function loadMapa() {
   ubicaciones = await api('ubicaciones');
   const grid = $('#grid');
+  decoPlano(grid);
   grid.querySelectorAll('.shelf').forEach(e => e.remove());
   ubicaciones.forEach(u => {
     const d = document.createElement('div');

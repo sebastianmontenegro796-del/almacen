@@ -144,3 +144,13 @@ td.wrap{white-space:normal;min-width:110px}
 .p3d-btns button{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:99px;padding:8px 13px;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;min-height:38px}
 .p3d-btns button.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 @keyframes aparece3d{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+/* ===== Plano real (almacen-layout.js) ===== */
+.plan.real{max-width:460px;background-size:14px 14px}
+.plan.real .mueble{position:absolute;border:1px dashed var(--border);border-radius:5px;pointer-events:none;
+  display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(7px,1.6vw,10px);font-weight:700;color:var(--muted);overflow:hidden}
+.plan.real .mueble.zona{background:var(--accent-soft);opacity:.7}
+.plan.real .mueble.nevera{border:1.5px solid #c8102e;color:#c8102e;writing-mode:vertical-rl}
+.plan.real .shelf{border-radius:5px;padding:1px}
+.plan.real .shelf h3{font-size:clamp(7px,2vw,11px)}
+.plan.real .shelf .count{font-size:clamp(6px,1.4vw,8px)}
+.plan.real .entrada{left:67%;width:29%}
