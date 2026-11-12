@@ -154,3 +154,84 @@ td.wrap{white-space:normal;min-width:110px}
 .plan.real .shelf h3{font-size:clamp(7px,2vw,11px)}
 .plan.real .shelf .count{font-size:clamp(6px,1.4vw,8px)}
 .plan.real .entrada{left:67%;width:29%}
+
+/* ===== Botones del 3D como en el Modelador: grupo arriba a la izquierda y ayuda abajo ===== */
+.p3d-btns{top:10px;bottom:auto;left:10px;right:auto;justify-content:flex-start;gap:4px;background:var(--card);border:1px solid var(--border);border-radius:99px;padding:3px;max-width:calc(100% - 20px)}
+.p3d-btns button{border:0;background:none;min-height:34px;padding:7px 12px}
+.p3d-btns button.on{background:var(--accent);color:var(--on-accent)}
+.p3d-ayuda{top:auto;bottom:10px}
+
+/* ===== Minimapa en la esquina (el mapa grande se abre al pulsarlo) ===== */
+.map-layout.sin-mapa{grid-template-columns:1fr}
+.map-layout.sin-mapa .plan-col{display:none}
+.vista-toggle .cerrar-mapa{flex:0 0 auto;padding:9px 14px;color:var(--text)}
+.minimapa{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:30;
+  display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 6px 5px;background:var(--card);color:var(--text);
+  border:1px solid var(--border);border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.3);cursor:pointer;font:600 .72rem/1 inherit;font-family:inherit}
+.minimapa[hidden]{display:none!important}
+.minimapa:active{transform:scale(.96)}
+.minimapa:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mm-plano{position:relative;display:block;height:118px;background:var(--bg);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.mm-plano i{position:absolute;display:block}
+.mm-m{background:var(--muted);opacity:.5;border-radius:1px}
+.mm-m.zona{background:var(--accent-soft);opacity:1}
+.mm-m.nevera{background:#c8102e;opacity:.85}
+.mm-u{background:var(--ok);border-radius:1px}
+.mm-u.alerta{background:var(--warn)}
+
+/* ===== Minimapa cuadrado y a color, arriba a la derecha junto al buscador ===== */
+.search-wrap{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.search-wrap #search{flex:1 1 180px;min-width:0;order:1}
+.search-wrap .minimapa{order:2}
+.search-wrap #results{flex:1 1 100%;order:3}
+.minimapa{position:static;width:104px;height:104px;flex:0 0 104px;flex-direction:row;align-items:center;justify-content:center;gap:8px;
+  padding:8px;border-radius:16px;background:linear-gradient(150deg,var(--accent-soft),var(--card) 70%);box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.mm-plano{height:86px;flex:0 0 auto;background:#cfd8e3;border:1px solid var(--border);border-radius:5px}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .mm-plano{background:#3b4a60}}
+.mm-m{opacity:1}
+.mm-m.metalica{background:#ea580c}
+.mm-m.gondola{background:linear-gradient(#dc2626,#f59e0b,#16a34a,#2563eb,#7c3aed)}
+.mm-m.rack{background:#1d4ed8}
+.mm-m.pale{background:#c49a6c}
+.mm-m.nevera{background:#c8102e}
+.mm-m.zona{background:#93c5fd;opacity:.6}
+.mm-m.zona.tienda{background:#f0abfc;opacity:.7}
+.mm-u{background:#22c55e;box-shadow:0 0 0 1px #fff,0 0 6px #22c55e}
+.mm-u.alerta{background:#ef4444;box-shadow:0 0 0 1px #fff,0 0 6px #ef4444}
+.mm-txt{display:flex;flex-direction:column;gap:4px;text-align:left;line-height:1.15;min-width:0}
+.mm-txt b{font-size:.8rem;color:var(--accent)}
+.mm-txt small{font-size:.62rem;color:var(--muted);font-weight:600}
+
+/* ===== Catálogo de tienda y lector de código de barras ===== */
+.cat-escanear-wrap{display:flex;justify-content:center;margin:2px 0 14px}
+.cat-escanear{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:520px;padding:16px 18px;font-size:1.05rem;font-weight:700;border-radius:14px}
+.cat-ico{width:26px;height:20px;flex:0 0 auto;background:repeating-linear-gradient(90deg,currentColor 0 2px,transparent 2px 4px,currentColor 4px 5px,transparent 5px 8px);border-radius:2px}
+.cat-cuenta{margin:0 0 8px;font-size:.85rem}
+.cat-tabla tbody tr[data-id]{cursor:pointer}
+.cat-tabla tbody tr[data-id]:hover,.cat-tabla tbody tr[data-id]:focus{background:var(--accent-soft);outline:none}
+.cat-desc{white-space:normal;min-width:140px}
+.cat-precio{font-weight:700;color:var(--ok);font-variant-numeric:tabular-nums}
+.cat-cod{color:var(--muted);font-size:.82rem;font-variant-numeric:tabular-nums}
+.cat-vacio{white-space:normal;text-align:center;padding:22px 12px}
+.dlg-escaner{width:min(520px,calc(100vw - 24px))}
+.esc-video{position:relative;width:100%;aspect-ratio:4/3;background:#000;border-radius:12px;overflow:hidden}
+.esc-video video{width:100%;height:100%;object-fit:cover;display:block}
+.esc-marco{position:absolute;left:10%;right:10%;top:28%;bottom:28%;border:3px solid rgba(255,255,255,.9);border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}
+.esc-linea{position:absolute;left:6%;right:6%;top:50%;height:2px;background:#ef4444;box-shadow:0 0 8px #ef4444;animation:escLinea 1.6s ease-in-out infinite}
+@keyframes escLinea{0%,100%{transform:translateY(-34px)}50%{transform:translateY(34px)}}
+@media (prefers-reduced-motion: reduce){.esc-linea{animation:none}}
+.esc-manual{display:flex;gap:8px;margin-top:4px}
+.esc-manual input{flex:1;min-width:0}
+.dlg-catinfo{text-align:center}
+.cat-info-etq{margin:0;color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.08em}
+.dlg-catinfo h2{font-size:1.35rem;margin:6px 0 4px;text-wrap:balance}
+.cat-info-precio{font-size:2.6rem;font-weight:800;color:var(--ok);margin:6px 0;font-variant-numeric:tabular-nums}
+.cat-info-cod{margin:0 0 12px;font-size:.85rem}
+#catFormAviso{background:var(--accent-soft);color:var(--text);border-radius:10px;padding:8px 10px;margin:0 0 10px;font-size:.88rem}
+
+/* Con la pestaña Catálogo: las pestañas se deslizan si no caben */
+.tabs{overflow-x:auto;max-width:100%;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:0 0 auto}
+@media (max-width:420px){.tabs button{padding:8px 9px}}
+

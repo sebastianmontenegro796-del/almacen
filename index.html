@@ -12,14 +12,14 @@
 <link rel="manifest" href="manifest.webmanifest?v=5">
 <link rel="icon" href="app-icon-192.png">
 <link rel="apple-touch-icon" href="app-apple-touch-icon.png">
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 
 <!-- Buscando servidor / sin conexión -->
 <section id="pantallaEstado" class="pantalla centro">
   <div class="card-centro">
-    <img class="logo-img" src="logo-mt-512.png" alt="MT Montenegro">
+    <img class="logo-img" src="app-icon-512.png" alt="Transpaleta Almacén MT">
     <h1>Almacén MT</h1>
     <p id="estadoTexto" class="muted">Buscando el servidor…</p>
     <div id="spinner" class="spinner"></div>
@@ -30,7 +30,7 @@
 <!-- Inicio de sesión -->
 <section id="pantallaLogin" class="pantalla centro" hidden>
   <form id="formLogin" class="card-centro" autocomplete="on">
-    <img class="logo-img" src="logo-mt-512.png" alt="MT Montenegro">
+    <img class="logo-img" src="app-icon-512.png" alt="Transpaleta Almacén MT">
     <h1>Almacén MT</h1>
     <p class="muted">Inicia sesión una vez; la app lo recordará.</p>
     <label>Usuario<input name="usuario" required autocomplete="username" autocapitalize="none"></label>
@@ -57,6 +57,7 @@
 
     <section id="view-mapa" class="view active">
       <div class="search-wrap">
+        <button type="button" class="minimapa" id="minimapa" aria-label="Abrir el mapa del almacén"><span class="mm-plano" id="mmPlano"></span><span class="mm-txt"><b>Ver mapa</b><small id="mmInfo"></small></span></button>
         <input id="search" type="search" placeholder="Buscar producto, referencia o ubicación…" autocomplete="off">
         <div id="results"></div>
       </div>
@@ -65,14 +66,15 @@
         <div class="vista-toggle" role="group" aria-label="Vista del mapa">
           <button type="button" data-vista="2d" class="on">Plano 2D</button>
           <button type="button" data-vista="3d">Vista 3D</button>
+        <button type="button" id="btnCerrarMapa" class="cerrar-mapa" aria-label="Cerrar el mapa">✕ Cerrar</button>
         </div>
         <div class="plano3d" id="plano3d" hidden>
           <div class="p3d-carga">Cargando vista 3D…</div>
-          <div class="p3d-ayuda">Arrastra para girar · pellizca para acercar · toca un palé</div>
+          <div class="p3d-ayuda">Toca un nivel para ver lo que hay · arrastra para girar · pellizca para acercar</div>
           <div class="p3d-btns">
-            <button type="button" data-p3d="girar">Girar solo</button>
-            <button type="button" data-p3d="arriba">Vista de arriba</button>
-            <button type="button" data-p3d="centrar">Centrar</button>
+            <button type="button" data-p3d="3d" class="on">3D</button>
+            <button type="button" data-p3d="arriba">Desde arriba</button>
+            <button type="button" data-p3d="cerca">Acercar al elegido</button>
           </div>
         </div>
         <div class="plan" id="grid">
@@ -178,8 +180,9 @@
 
 <script src="config.js"></script>
 <script src="almacen-layout.js?v=1"></script>
-<script src="mapa3d.js?v=3"></script>
-<script src="app.js?v=10"></script>
-<script src="perrito.js?v=1"></script>
+<script src="mapa3d.js?v=5"></script>
+<script src="app.js?v=13"></script>
+<script src="catalogo.js?v=1"></script>
+<script src="perrito.js?v=3"></script>
 </body>
 </html>

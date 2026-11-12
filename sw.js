@@ -1,7 +1,7 @@
 // Service worker: guarda la interfaz para que la app abra rápido y sin conexión.
 // Los datos siempre se piden al servidor (no se guardan aquí).
-const CACHE = 'seba-almacen-v10';
-const SHELL = ['./', 'index.html', 'app.js', 'style.css', 'config.js', 'mapa3d.js', 'almacen-layout.js', 'perrito.js',
+const CACHE = 'seba-almacen-v17';
+const SHELL = ['./', 'index.html', 'app.js', 'style.css', 'config.js', 'mapa3d.js', 'almacen-layout.js', 'catalogo.js', 'perrito.js',
                'app-icon-192.png', 'app-icon-512.png', 'app-apple-touch-icon.png', 'logo-mt-192.png', 'logo-mt-512.png',
                'transpaleta.png'];
 

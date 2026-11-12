@@ -230,7 +230,8 @@ async function loadMapa() {
   });
   $('#selUbic').innerHTML = '<option value="">— Sin ubicación —</option>' +
     ubicaciones.map(u => `<option value="${esc(u.codigo)}">${esc(u.codigo)} — ${esc(u.etiqueta)}</option>`).join('');
-  if (vista === '3d') ponerVista('3d');
+  pintarMinimapa();
+  if (mapaAbierto && vista === '3d') ponerVista('3d');
 }
 
 /* ---------- Vista 3D ---------- */
@@ -252,10 +253,39 @@ async function ponerVista(v) {
     carga.textContent = err.message;
   }
 }
-document.querySelectorAll('.vista-toggle button').forEach(b => b.onclick = () => ponerVista(b.dataset.vista));
+document.querySelectorAll('.vista-toggle button[data-vista]').forEach(b => b.onclick = () => ponerVista(b.dataset.vista));
+/* ---------- Minimapa: el mapa grande va cerrado; se abre al pulsar el minimapa de la esquina ---------- */
+let mapaAbierto = false;
+function rectMueble(m, W, D) {
+  const largo = m.tipo === 'zona' ? m.ancho : m.huecos * m.ancho, fondo = m.tipo === 'pale' ? 1.2 : m.fondo;
+  const girado = m.rot % 180 !== 0, w = girado ? fondo : largo, d = girado ? largo : fondo;
+  return `left:${(m.x - w / 2) / W * 100}%;top:${(m.z - d / 2) / D * 100}%;width:${w / W * 100}%;height:${d / D * 100}%`;
+}
+function pintarMinimapa() {
+  const mm = $('#mmPlano'), lay = window.ALMACEN_LAYOUT;
+  if (!mm || !lay) return;
+  const {ancho: W, fondo: D} = lay.nave;
+  mm.style.aspectRatio = `${W} / ${D}`;
+  mm.innerHTML = lay.modulos.map(m => `<i class="mm-m ${m.tipo}${/tienda/i.test(m.nombre) ? ' tienda' : ''}" style="${rectMueble(m, W, D)}"></i>`).join('') +
+    ubicaciones.filter(u => u.num_productos).map(u =>
+      `<i class="mm-u${u.bajo_stock ? ' alerta' : ''}" style="left:${u.pos_left}%;top:${u.pos_top}%;width:${u.pos_w}%;height:${u.pos_h}%"></i>`).join('');
+  const n = ubicaciones.filter(u => u.num_productos).length, info = $('#mmInfo');
+  if (info) info.textContent = n === 1 ? '1 sitio con productos' : n + ' sitios con productos';
+}
+function ponerMapa(abierto) {
+  mapaAbierto = abierto;
+  $('.map-layout').classList.toggle('sin-mapa', !abierto);
+  $('#minimapa').hidden = abierto;
+  $('#view-mapa .legend').hidden = !abierto;
+  if (abierto) ponerVista('2d');                 // siempre se abre en 2D; desde ahí se puede pasar a 3D
+  else if (window.Mapa3D) Mapa3D.ocultar();
+}
+$('#minimapa').onclick = () => ponerMapa(true);
+$('#btnCerrarMapa').onclick = () => ponerMapa(false);
+ponerMapa(false);
 document.querySelectorAll('[data-p3d]').forEach(b => b.onclick = () => {
-  const girando = Mapa3D.accion(b.dataset.p3d);
-  $('[data-p3d="girar"]').classList.toggle('on', !!girando);
+  const v = Mapa3D.accion(b.dataset.p3d);
+  document.querySelectorAll('[data-p3d]').forEach(x => x.classList.toggle('on', x.dataset.p3d === v));
 });
 
 async function showDetail(codigo, scroll = true) {

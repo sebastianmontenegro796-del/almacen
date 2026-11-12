@@ -1,7 +1,7 @@
 /* Perrito mascota de Almacén MT.
    Un labrador con casco y chaleco recorre todo el borde de la pantalla (abajo → derecha → arriba → izquierda)
    y cambia de modelo cada 2 horas entre los 6 elegidos (1, 2, 3, 5, 8 y 9).
-   No bloquea nada: se puede tocar lo que haya debajo. */
+   Si lo tocas, se para, da un saltito y te dice una frase en un bocadillo. */
 (function () {
   if (window.__perritoMT) return;
   window.__perritoMT = true;
@@ -102,7 +102,7 @@
   /* ---------- Estilos (todo dentro de .mt-perro para no chocar con la app) ---------- */
   const css = document.createElement('style');
   css.textContent = `
-  .mt-perro{position:fixed;left:0;top:0;width:76px;height:54px;z-index:40;pointer-events:none;will-change:transform;
+  .mt-perro{position:fixed;left:0;top:0;width:76px;height:54px;z-index:40;cursor:pointer;-webkit-tap-highlight-color:transparent;will-change:transform;
     transform-origin:50% 100%;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
   .mt-perro svg{width:100%;height:100%;display:block;overflow:visible}
   .mt-perro.andando .leg-a{animation:mtPaso var(--v) ease-in-out infinite alternate}
@@ -119,7 +119,13 @@
   @keyframes mtCola{from{transform:rotate(-12deg)}to{transform:rotate(20deg)}}
   @keyframes mtAsiente{from{transform:rotate(0)}to{transform:rotate(-7deg)}}
   @keyframes mtOndea{from{transform:skewX(-8deg)}to{transform:skewX(8deg)}}
-  @media (prefers-reduced-motion:reduce){.mt-perro{display:none}}`;
+  .mt-perro.salta svg{animation:mtSalto .45s ease-out}
+  @keyframes mtSalto{0%,100%{transform:translateY(0)}40%{transform:translateY(-14px)}}
+  .mt-bocadillo{position:fixed;left:0;top:0;z-index:41;max-width:min(240px,calc(100vw - 24px));padding:9px 13px;border-radius:14px;
+    background:#fff;color:#0f172a;font:600 14px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.35);
+    pointer-events:none;opacity:0;transform:scale(.85);transition:opacity .18s,transform .18s}
+  .mt-bocadillo.ver{opacity:1;transform:scale(1)}
+  @media (prefers-reduced-motion:reduce){.mt-perro,.mt-bocadillo{display:none}}`;
   document.head.appendChild(css);
 
   const perro = document.createElement('div');
@@ -166,8 +172,41 @@
       const p = punto(s);
       // el punto (x, y) es donde apoyan las patas; el dibujo se coloca encima y se gira para pisar el borde
       perro.style.transform = `translate(${p.x - 38}px, ${p.y - 54}px) rotate(${p.ang}deg)`;
+      if (hablando) colocarBocadillo(p);
     }
     requestAnimationFrame(frame);
   }
+  /* ---------- Si lo tocas: se para, salta y dice algo ---------- */
+  // Frases del jefe (salen al azar, sin repetir la misma dos veces seguidas)
+  const FRASES = ['Ya cerremos', 'Tengo hambre', 'Oe ñaño, tráete un encebollado', 'No, mañana', 'Nou tumorou'];
+  const saludo = () => { const h = new Date().getHours(); return h < 6 ? '¡Uf, qué tarde! ¿Aún trabajando? 🌙' : h < 13 ? '¡Buenos días! ☀️' : h < 20 ? '¡Buenas tardes!' : '¡Buenas noches! 🌙'; };
+  const bocadillo = document.createElement('div');
+  bocadillo.className = 'mt-bocadillo'; bocadillo.setAttribute('role', 'status'); bocadillo.setAttribute('aria-live', 'polite');
+  document.body.appendChild(bocadillo);
+  perro.setAttribute('aria-label', 'Perrito del almacén: tócalo y te dice algo');
+  let hablando = false, tHablar = 0, ultimaFrase = -1, saludado = false;
+  function colocarBocadillo(p) {
+    const W = document.documentElement.clientWidth, H = window.innerHeight, bw = bocadillo.offsetWidth, bh = bocadillo.offsetHeight, m = 8;
+    let x, y;
+    if (p.ang === 0) { x = p.x - bw / 2; y = p.y - 54 - bh - m; }           // abajo: el bocadillo encima
+    else if (p.ang === -90) { x = p.x - 54 - bw - m; y = p.y - bh / 2; }    // derecha: a su izquierda
+    else if (p.ang === -180) { x = p.x - bw / 2; y = p.y + 54 + m; }        // arriba: debajo
+    else { x = p.x + 54 + m; y = p.y - bh / 2; }                            // izquierda: a su derecha
+    x = Math.max(m, Math.min(W - bw - m, x)); y = Math.max(m, Math.min(H - bh - m, y));
+    bocadillo.style.transform = ''; bocadillo.style.left = x + 'px'; bocadillo.style.top = y + 'px';
+  }
+  perro.addEventListener('click', e => {
+    e.stopPropagation();
+    let i; do { i = Math.floor(Math.random() * FRASES.length); } while (i === ultimaFrase && FRASES.length > 1);
+    ultimaFrase = i;
+    bocadillo.textContent = FRASES[i];
+    hablando = true; pausa = 3.2;
+    perro.classList.remove('andando', 'salta'); void perro.offsetWidth; perro.classList.add('feliz', 'salta');
+    if (navigator.vibrate) navigator.vibrate(30);
+    colocarBocadillo(punto(s));
+    bocadillo.classList.add('ver');
+    clearTimeout(tHablar);
+    tHablar = setTimeout(() => { bocadillo.classList.remove('ver'); hablando = false; perro.classList.remove('salta'); }, 3000);
+  });
   requestAnimationFrame(frame);
 })();

@@ -8,9 +8,25 @@
                 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js'];
   const LAYOUT = window.ALMACEN_LAYOUT || {nave: {ancho: 30, fondo: 40}, modulos: []};
   const W = LAYOUT.nave.ancho, D = LAYOUT.nave.fondo, K = Math.max(W, D);
-  // vista inicial: desde la puerta, mirando hacia el fondo de la nave
-  const VISTA_INICIAL = {pos: [W * .75, K * .42, D / 2 + K * .3], target: [0, 0, -D * .12]};
-  const VISTA_ARRIBA = {pos: [0, K * 1.5, 0.01], target: [0, 0, 0]};
+  // mismas vistas que el Modelador
+  const VISTA_INICIAL = {pos: [-K * .35, K * .75, K * 1.05], target: [0, 0, 0]};
+  const VISTA_ARRIBA = {pos: [0, K * 1.55, 0.01], target: [0, 0, 0]};
+  const MOD = id => LAYOUT.modulos.find(m => m.id === id);
+  // Altura (y0, y1 en metros) de cada ubicación: arriba / medio en los bordes, la estantería entera en el resto
+  function rangoY(cod) {
+    const arriba = m => m ? [m.alto - .1, m.alto + 1.1] : [0, 1.5];
+    const rk = MOD('b2'), hN = rk ? rk.alto / rk.baldas : 1;
+    // medio = solo la fila justo debajo de la de arriba (no las de más abajo)
+    if (/^F\d+M$/.test(cod)) return rk ? [(rk.baldas - 2) * hN, (rk.baldas - 1) * hN] : [0, 1.5];
+    if (/^F\d+$/.test(cod)) return rk ? [(rk.baldas - 1) * hN, rk.alto + .3] : [0, 1.5];
+    if (/^I\d+$/.test(cod)) return arriba(MOD('a'));
+    if (/^D\d+$/.test(cod)) return arriba(MOD('d'));
+    const est = {EST1: 'c1', EST2: 'c1', EST3: 'c2', EST4: 'c2', EST5: 'c3', EST6: 'c3'}[cod];
+    if (est) { const m = MOD(est); return [0, m ? m.alto : 2]; }
+    if (/^E\d+$/.test(cod)) { const m = MOD('mmwbdi9lz1yd'); return [0, m ? m.alto : 2]; }
+    return [0, 1.4];
+  }
+  function oscuro() { return matchMedia('(prefers-color-scheme: dark)').matches && document.documentElement.dataset.theme !== 'light'; }
 
   let cargando = null;
   let el, renderer, scene, camera, controls, ubicsGrupo, muebles, raycaster, puntero;
@@ -254,6 +270,19 @@
   }
   const CONSTRUCTOR = {gondola, metalica, rack, pale: palesSuelo, nevera, zona};
 
+  function cartelMueble(texto) {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 112;
+    const g = c.getContext('2d');
+    g.fillStyle = 'rgba(15,23,42,.82)'; const r = 26;
+    g.beginPath(); g.moveTo(r, 4); g.arcTo(508, 4, 508, 108, r); g.arcTo(508, 108, 4, 108, r); g.arcTo(4, 108, 4, 4, r); g.arcTo(4, 4, 508, 4, r); g.fill();
+    g.fillStyle = '#f8fafc'; g.font = '600 40px Segoe UI, Roboto, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    let t = texto; while (g.measureText(t).width > 470 && t.length > 4) t = t.slice(0, -2);
+    g.fillText(t === texto ? t : t + '…', 256, 58);
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({map: new THREE.CanvasTexture(c), depthTest: false, transparent: true}));
+    s.scale.set(3.6, .79, 1); s.renderOrder = 9;
+    return s;
+  }
+
   function crearMuebles() {
     const grupo = new THREE.Group(), geo = new THREE.BoxGeometry(1, 1, 1);
     const mat = new THREE.MeshStandardMaterial({color: 0xffffff, roughness: .85, metalness: .05});
@@ -268,10 +297,9 @@
       const g = new THREE.Group(); g.add(im);
       g.position.set(md.x - W / 2, 0, md.z - D / 2); g.rotation.y = md.rot * Math.PI / 180;
       grupo.add(g);
-      if (md.tipo === 'zona') {   // nombre de la zona en el suelo
-        const et = etiqueta(md.nombre.length > 9 ? md.nombre.split(/[ /]+/)[0] : md.nombre, '', colores(), false);
-        et.scale.set(2.6, 1.3, 1); et.position.set(md.x - W / 2, 1.3, md.z - D / 2); grupo.add(et);
-      }
+      // cartel con el nombre del mueble encima, como en el Modelador
+      const alto = md.tipo === 'zona' ? .9 : md.tipo === 'pale' ? .15 + md.cargaAlto : md.alto;
+      const et = cartelMueble(md.nombre); et.position.set(0, Math.max(alto, .9) + .7, 0); g.add(et);
     }
     return grupo;
   }
@@ -285,7 +313,6 @@
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(C.bg);
-    scene.fog = new THREE.Fog(C.bg, K * 1.8, K * 3.5);
 
     camera = new THREE.PerspectiveCamera(45, 1, .1, K * 6);
     camera.position.set(...VISTA_ARRIBA.pos);
@@ -302,26 +329,28 @@
       const a = el.querySelector('.p3d-ayuda'); if (a) a.style.opacity = 0;
     });
 
-    scene.add(new THREE.HemisphereLight('#ffffff', '#445566', .8));
-    const sol = new THREE.DirectionalLight('#ffffff', .7); sol.position.set(-12, 30, 18); scene.add(sol);
-    const sol2 = new THREE.DirectionalLight('#ffffff', .25); sol2.position.set(15, 12, -20); scene.add(sol2);
+    // Luces, suelo, cuadrícula y paredes con los mismos colores que el Modelador
+    const N = oscuro() ? {floor: '#3b4a60', grid: '#4b5d76', wall: '#94a3b8'} : {floor: '#cfd8e3', grid: '#b4c1d0', wall: '#64748b'};
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x445566, .75));
+    const sol = new THREE.DirectionalLight(0xffffff, .7); sol.position.set(-12, 30, 18); scene.add(sol);
+    const sol2 = new THREE.DirectionalLight(0xffffff, .25); sol2.position.set(15, 12, -20); scene.add(sol2);
 
-    const suelo = new THREE.Mesh(new THREE.PlaneGeometry(W, D), new THREE.MeshStandardMaterial({color: C.card, roughness: .95}));
+    const suelo = new THREE.Mesh(new THREE.PlaneGeometry(W, D), new THREE.MeshStandardMaterial({color: N.floor, roughness: 1}));
     suelo.rotation.x = -Math.PI / 2; scene.add(suelo);
-    const rej = new THREE.GridHelper(K, Math.round(K), C.borde, C.borde);
+    const rej = new THREE.GridHelper(K, Math.round(K), N.grid, N.grid);
     rej.scale.set(W / K, 1, D / K); rej.position.y = .005;
-    rej.material.transparent = true; rej.material.opacity = .45;
+    rej.material.transparent = true; rej.material.opacity = .5;
     scene.add(rej);
 
     // Paredes bajas semitransparentes, con la puerta delante a la derecha (como en el Modelador)
-    const matPared = new THREE.MeshStandardMaterial({color: C.muted, transparent: true, opacity: .22, roughness: 1});
+    const matPared = new THREE.MeshStandardMaterial({color: N.wall, transparent: true, opacity: .22});
     const hW = 2.2, t = .2, eI = W * .67, eD = W * .96;
     const muro = (x, z, w, d) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, hW, d), matPared); m.position.set(x - W / 2, hW / 2, z - D / 2); scene.add(m); };
     muro(W / 2, 0, W, t); muro(0, D / 2, t, D); muro(W, D / 2, t, D); muro(eI / 2, D, eI, t); muro((eD + W) / 2, D, W - eD, t);
     const ent = new THREE.Mesh(new THREE.BoxGeometry(eD - eI, .03, .3), new THREE.MeshBasicMaterial({color: C.accent}));
     ent.position.set((eI + eD) / 2 - W / 2, .02, D / 2); scene.add(ent);
-    const cartel = etiqueta('PUERTA', '', C, false);
-    cartel.position.set((eI + eD) / 2 - W / 2, 1.4, D / 2 + 1.4); cartel.scale.set(2.6, 1.3, 1);
+    const cartel = cartelMueble('PUERTA');
+    cartel.position.set((eI + eD) / 2 - W / 2, 1.2, D / 2 + 1.2); cartel.scale.set(2.6, .57, 1);
     scene.add(cartel);
 
     muebles = crearMuebles();
@@ -362,33 +391,35 @@
     liberar(ubicsGrupo);
     ubicsGrupo.clear();
     items = {};
+    const porCodigo = Object.fromEntries(lista.map(u => [u.codigo, u]));
     lista.forEach(u => {
-      const {x, z, w, d} = pos(u);
+      let {x, z, w, d} = pos(u);
+      // F1 (arriba) y F1M (medio) son el mismo palé a distinta altura: en 3D ocupan todo el fondo del rack
+      const f = /^(F\d+)(M?)$/.exec(u.codigo), par = f && porCodigo[f[2] ? f[1] : f[1] + 'M'];
+      if (par) { const p = pos(par), z0 = Math.min(z - d / 2, p.z - p.d / 2), z1 = Math.max(z + d / 2, p.z + p.d / 2); z = (z0 + z1) / 2; d = z1 - z0; }
       const n = Number(u.num_productos) || 0;
       const color = u.bajo_stock ? C.warn : n ? C.ok : null;
-      const alto = /^EST/.test(u.codigo) ? 2.2 : /^[FIDE]/.test(u.codigo) ? 3.2 : 1.5;
+      const [y0, y1] = rangoY(u.codigo), alto = y1 - y0, yc = y0 + alto / 2;
       const g = new THREE.Group();
       g.position.set(x, 0, z);
       ubicsGrupo.add(g);
 
-      const marca = new THREE.Mesh(new THREE.PlaneGeometry(w, d),
-        new THREE.MeshBasicMaterial({color: color || C.accent, transparent: true, opacity: color ? .45 : .08, depthWrite: false}));
-      marca.rotation.x = -Math.PI / 2; marca.position.y = .03;
-      g.add(marca);
-      if (color) {   // ubicación con productos: caja de color alrededor, para verla aunque la tape el mueble
+      if (color) {   // nivel con productos: caja de color transparente, para verla aunque la tape el mueble
+        const vol = new THREE.Mesh(new THREE.BoxGeometry(w, alto, d), new THREE.MeshBasicMaterial({color, transparent: true, opacity: .22, depthWrite: false}));
+        vol.position.y = yc; g.add(vol);
         const marco = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w, alto, d)), new THREE.LineBasicMaterial({color}));
-        marco.position.y = alto / 2; g.add(marco);
+        marco.position.y = yc; g.add(marco);
       }
 
       const hit = new THREE.Mesh(new THREE.BoxGeometry(w, alto, d),
         new THREE.MeshBasicMaterial({transparent: true, opacity: 0, depthWrite: false}));
-      hit.position.y = alto / 2;
+      hit.position.y = yc;
       hit.userData.codigo = u.codigo;
       g.add(hit);
 
       const borde = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w + .08, alto + .08, d + .08)),
         new THREE.LineBasicMaterial({color: C.accent}));
-      borde.position.y = alto / 2;
+      borde.position.y = yc;
       borde.visible = false;
       g.add(borde);
 
@@ -397,10 +428,10 @@
       const esc = /^EST/.test(u.codigo) ? .13 : .1;
       const et = etiqueta(u.codigo, sub, C, false, color, true);
       et.scale.set(esc, esc / 2, 1);
-      et.position.set(0, alto + .4, 0);
+      et.position.set(0, f && f[2] ? yc : y1 + .3, 0);
       g.add(et);
 
-      items[u.codigo] = {grupo: g, hit, borde, etiqueta: et, sub, esc, C, color, resaltada: false};
+      items[u.codigo] = {grupo: g, hit, borde, etiqueta: et, sub, esc, C, color, yc, resaltada: false};
     });
     marcarSeleccion();
   }
@@ -431,14 +462,14 @@
       t0: ahora(), dur
     };
   }
-  function enfocar(codigo) {
+  // Acercar al elegido (como el botón del Modelador): la cámara se pone delante del nivel, desde el pasillo
+  function enfocar(codigo, forzar) {
     const it = items[codigo];
-    if (!it || ahora() < introHasta) return;
+    if (!it || (!forzar && ahora() < introHasta)) return;
     const p = it.grupo.position;
-    const dir = camera.position.clone().sub(controls.target).normalize();
-    const dist = Math.min(Math.max(camera.position.distanceTo(controls.target), 8), 14);
-    const destino = new THREE.Vector3(p.x, 0, p.z);
-    camTween = {fromP: camera.position.clone(), toP: destino.clone().add(dir.multiplyScalar(dist)),
+    const destino = new THREE.Vector3(p.x, Math.max(1, it.yc), p.z);
+    const lado = p.x > 0 ? -1 : 1;
+    camTween = {fromP: camera.position.clone(), toP: destino.clone().add(new THREE.Vector3(4.5 * lado, 4, 6)),
                 fromT: controls.target.clone(), toT: destino, t0: ahora(), dur: 900};
   }
 
@@ -503,12 +534,14 @@
     enfocar(codigo);
   }
   function ocultar() { activo = false; }
+  // Botones de vista: '3d', 'arriba', 'cerca' (los mismos que el Modelador). Devuelve la vista que queda puesta.
   function accion(nombre) {
-    if (!renderer) return false;
-    if (nombre === 'arriba') { controls.autoRotate = false; irA(VISTA_ARRIBA); }
-    if (nombre === 'centrar') { controls.autoRotate = false; irA(VISTA_INICIAL); }
-    if (nombre === 'girar') { camTween = null; controls.autoRotate = !controls.autoRotate; }
-    return controls.autoRotate;
+    if (!renderer) return null;
+    controls.autoRotate = false;
+    if (nombre === 'arriba') { irA(VISTA_ARRIBA, 900); return 'arriba'; }
+    if (nombre === 'cerca' && items[selected]) { enfocar(selected, true); return 'cerca'; }
+    irA(VISTA_INICIAL, 900);
+    return '3d';
   }
 
   window.Mapa3D = {mostrar, actualizar, seleccionar, ocultar, accion};
