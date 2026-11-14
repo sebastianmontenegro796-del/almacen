@@ -1,5 +1,5 @@
 /* Perrito mascota de Almacén MT.
-   Un labrador con casco y chaleco recorre todo el borde de la pantalla (abajo → derecha → arriba → izquierda)
+   Un labrador con casco y chaleco pasea solo por la parte de abajo de la pantalla, de lado a lado (ida y vuelta)
    y cambia de modelo cada 2 horas entre los 6 elegidos (1, 2, 3, 5, 8 y 9).
    Si lo tocas, se para, da un saltito y te dice una frase en un bocadillo. */
 (function () {
@@ -125,6 +125,9 @@
     background:#fff;color:#0f172a;font:600 14px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.35);
     pointer-events:none;opacity:0;transform:scale(.85);transition:opacity .18s,transform .18s}
   .mt-bocadillo.ver{opacity:1;transform:scale(1)}
+  /* hueco abajo para que el perrito no tape lo último de la página ni los botones fijos */
+  body{padding-bottom:calc(58px + env(safe-area-inset-bottom,0px))}
+  .cr-pie{bottom:54px}
   @media (prefers-reduced-motion:reduce){.mt-perro,.mt-bocadillo{display:none}}`;
   document.head.appendChild(css);
 
@@ -143,17 +146,14 @@
   ponerModelo();
   setInterval(ponerModelo, 60 * 1000);   // revisa cada minuto si ya tocan otras 2 horas
 
-  /* ---------- Recorrido por el borde (sentido contrario a las agujas del reloj, patas siempre hacia el borde) ---------- */
-  // s = distancia recorrida. Tramos: abajo (→), derecha (↑), arriba (←), izquierda (↓)
+  /* ---------- Paseo por abajo: de izquierda a derecha y vuelta, mirando hacia donde va ---------- */
+  // s = distancia recorrida; cada ida + vuelta mide 2 × (ancho de la pantalla − ancho del perro)
   let s = Math.random() * 400, ultimo = performance.now(), pausa = 0, proximaPausa = 12 + Math.random() * 15;
   function punto(dist) {
     const W = document.documentElement.clientWidth, H = window.innerHeight;
-    const per = 2 * (W + H);
-    let d = ((dist % per) + per) % per;
-    if (d < W) return {x: d, y: H, ang: 0};
-    d -= W; if (d < H) return {x: W, y: H - d, ang: -90};
-    d -= H; if (d < W) return {x: W - d, y: 0, ang: -180};
-    d -= W; return {x: 0, y: d, ang: -270};
+    const L = Math.max(1, W - 76);
+    const d = ((dist % (2 * L)) + 2 * L) % (2 * L);
+    return d < L ? {x: 38 + d, y: H, dir: 1} : {x: 38 + (2 * L - d), y: H, dir: -1};
   }
   function frame(t) {
     const dt = Math.min(60, t - ultimo) / 1000; ultimo = t;
@@ -170,8 +170,8 @@
         }
       }
       const p = punto(s);
-      // el punto (x, y) es donde apoyan las patas; el dibujo se coloca encima y se gira para pisar el borde
-      perro.style.transform = `translate(${p.x - 38}px, ${p.y - 54}px) rotate(${p.ang}deg)`;
+      // el punto (x, y) es donde apoyan las patas; de vuelta (hacia la izquierda) el dibujo se da la vuelta
+      perro.style.transform = `translate(${p.x - 38}px, ${p.y - 54}px) scaleX(${p.dir})`;
       if (hablando) colocarBocadillo(p);
     }
     requestAnimationFrame(frame);
@@ -187,11 +187,7 @@
   let hablando = false, tHablar = 0, ultimaFrase = -1, saludado = false;
   function colocarBocadillo(p) {
     const W = document.documentElement.clientWidth, H = window.innerHeight, bw = bocadillo.offsetWidth, bh = bocadillo.offsetHeight, m = 8;
-    let x, y;
-    if (p.ang === 0) { x = p.x - bw / 2; y = p.y - 54 - bh - m; }           // abajo: el bocadillo encima
-    else if (p.ang === -90) { x = p.x - 54 - bw - m; y = p.y - bh / 2; }    // derecha: a su izquierda
-    else if (p.ang === -180) { x = p.x - bw / 2; y = p.y + 54 + m; }        // arriba: debajo
-    else { x = p.x + 54 + m; y = p.y - bh / 2; }                            // izquierda: a su derecha
+    let x = p.x - bw / 2, y = p.y - 54 - bh - m;                            // el bocadillo, encima del perro
     x = Math.max(m, Math.min(W - bw - m, x)); y = Math.max(m, Math.min(H - bh - m, y));
     bocadillo.style.transform = ''; bocadillo.style.left = x + 'px'; bocadillo.style.top = y + 'px';
   }
