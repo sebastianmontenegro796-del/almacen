@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#1e1e1e">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Almacén MT">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Almacén MT</title>
-<link rel="manifest" href="manifest.webmanifest?v=6">
+<link rel="manifest" href="manifest.webmanifest?v=7">
 <link rel="icon" href="icono-perro-192.png">
 <link rel="apple-touch-icon" href="icono-perro-apple.png">
-<link rel="stylesheet" href="style.css?v=18">
+<link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
 
@@ -45,18 +45,30 @@
   <header class="top">
     <div class="brand"><img src="transpaleta.png" alt="" class="brand-trans"> Almacén MT</div>
     <nav class="tabs">
-      <button data-view="resumen" class="active">Inicio</button>
-      <button data-view="mapa">Mapa</button>
-      <button data-view="productos">Productos</button>
-      <button data-view="movimientos">Movimientos</button>
-      <button data-view="ajustes">Ajustes</button>
+      <!-- Barra de iconos. El botón redondo del centro (⚡ Carga) lo añade cargarapida.js
+           detrás de Productos; el de Catálogo (catalogo.js) queda oculto y se abre desde Inicio. -->
+      <button data-view="resumen" class="active" aria-label="Inicio" title="Inicio"><svg class="ico" viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button>
+      <button data-view="productos" aria-label="Productos" title="Productos"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3 3 7.5v9L12 21l9-4.5v-9z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg></button>
+      <button data-view="movimientos" aria-label="Movimientos" title="Movimientos"><svg class="ico" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></svg></button>
+      <button data-view="ajustes" aria-label="Ajustes" title="Ajustes"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg></button>
     </nav>
   </header>
 
   <main>
     <section id="view-resumen" class="view active">
-      <h2 style="margin:4px 0 14px">Resumen</h2>
+      <h2 class="res-titulo">Resumen</h2>
+      <div class="res-subt">Almacén MT</div>
       <section class="stats" id="stats"></section>
+      <div class="accesos">
+        <button type="button" class="acceso" id="irMapa">
+          <span class="acc-ic"><svg class="ico" viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></span>
+          Mapa<small>Ver las filas y huecos</small>
+        </button>
+        <button type="button" class="acceso" id="irCatalogo">
+          <span class="acc-ic"><svg class="ico" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h7"/></svg></span>
+          Catálogo<small>Fotos de productos</small>
+        </button>
+      </div>
     </section>
 
     <section id="view-mapa" class="view">
@@ -203,8 +215,22 @@
 <script src="config.js"></script>
 <script src="almacen-layout.js?v=1"></script>
 <script src="mapa3d.js?v=5"></script>
-<script src="app.js?v=15"></script>
+<script src="app.js?v=16"></script>
 <script src="catalogo.js?v=1"></script>
 <script src="cargarapida.js?v=1"></script>
+<script>
+  // Barra de abajo: ⚡ Carga como botón redondo del centro; Mapa y Catálogo se abren desde Inicio
+  (function () {
+    const carga = document.querySelector('.tabs [data-view="carga"]');
+    if (carga) {
+      carga.classList.add('btn-central');
+      carga.setAttribute('aria-label', 'Carga rápida'); carga.title = 'Carga rápida';
+      carga.innerHTML = '<svg class="ico" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>';
+    }
+    const cat = document.querySelector('.tabs [data-view="catalogo"]');
+    document.getElementById('irMapa').onclick = () => showView('mapa');
+    document.getElementById('irCatalogo').onclick = () => cat && cat.click();
+  })();
+</script>
 </body>
 </html>

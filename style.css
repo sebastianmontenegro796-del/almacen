@@ -391,3 +391,24 @@ header.top .tabs button{padding:6px 10px;font-size:.72rem}
   .stat.grande{padding:18px 16px}
   .stat.grande b{font-size:2.2rem}
 }
+
+/* ---------- Barra de iconos abajo + botón redondo central (⚡ Carga) ---------- */
+svg.ico{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}
+header.top .tabs{justify-content:space-around;overflow:visible;padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}
+header.top .tabs button{flex:0 0 56px;height:48px;padding:0;display:grid;place-items:center;border-radius:12px;color:var(--muted);background:none}
+header.top .tabs button.active{color:var(--accent);background:none}
+header.top .tabs [data-view="catalogo"]{display:none}
+header.top .tabs button.btn-central{flex:0 0 62px;height:62px;border-radius:50%;margin-top:-28px;background:var(--accent);color:var(--on-accent);
+  border:4px solid var(--bg);box-shadow:0 6px 16px rgba(0,0,0,.45)}
+header.top .tabs button.btn-central.active{background:var(--accent);color:var(--on-accent);box-shadow:0 0 0 3px var(--accent-soft),0 6px 16px rgba(0,0,0,.45)}
+header.top .tabs button.btn-central svg.ico{width:30px;height:30px;fill:currentColor;stroke:none}
+
+/* Inicio: subtítulo y accesos a Mapa y Catálogo */
+.res-titulo{margin:4px 0 0}
+.res-subt{color:var(--muted);font-size:.95rem;margin:2px 0 14px}
+.accesos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.acceso{display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-align:left;padding:16px 14px;border-radius:14px;
+  border:1px solid var(--border);background:var(--card);color:var(--text);font:inherit;font-size:.95rem;font-weight:600;cursor:pointer}
+.acceso small{color:var(--muted);font-weight:400;font-size:.8rem;margin-top:-6px}
+.acc-ic{width:40px;height:40px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.acc-ic svg.ico{width:24px;height:24px}

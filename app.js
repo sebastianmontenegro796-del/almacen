@@ -54,6 +54,10 @@ const TEMAS = [
 function aplicarTema(id) {
   if (id) document.documentElement.setAttribute('data-theme', id);
   else document.documentElement.removeAttribute('data-theme');
+  // Barras del móvil (hora/batería arriba y botones de Android abajo) del mismo color que la app
+  const color = getComputedStyle(document.documentElement).getPropertyValue('--card').trim();
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (color && meta) meta.setAttribute('content', color);
 }
 aplicarTema(ls.get('seba_tema') || 'verde');
 
