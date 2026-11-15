@@ -361,3 +361,33 @@ td.wrap{white-space:normal;min-width:110px}
 .tema-terracota{background:#190f0c;color:#e2603a}
 .tema-esmeralda{background:#0b1410;color:#2bae66}
 .tema-mono{background:#111113;color:#c9cacc}
+
+/* ===== Pantalla de Inicio (Resumen) ===== */
+.stat.grande{grid-column:1/-1;padding:18px 16px}
+.stat.grande b{font-size:2.2rem;margin-top:2px}
+.stat.grande .sub{display:block;color:var(--accent);font-size:.8rem;margin-top:6px;font-weight:600}
+
+/* ===== Barra de navegación abajo (antes pestañas arriba) ===== */
+main{padding:16px 16px calc(86px + env(safe-area-inset-bottom,0)) 16px}
+.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;margin:0;
+  display:flex;justify-content:space-around;align-items:center;gap:2px;
+  background:var(--card);border-top:1px solid var(--border);
+  padding:8px 6px calc(8px + env(safe-area-inset-bottom,0));
+}
+.tabs button{flex:0 0 auto;color:var(--muted);font-size:.72rem;font-weight:600;padding:6px 10px;border-radius:10px;background:none}
+.tabs button.active{color:var(--accent);background:none}
+/* el aviso y el pie de Carga rápida, por encima de la barra */
+.toast{bottom:calc(86px + env(safe-area-inset-bottom,0))}
+.cr-pie{bottom:78px}
+/* Barra de abajo e Inicio en el móvil: anula reglas antiguas de la cabecera que hacían
+   los botones más grandes y metían las tarjetas pequeñas en 4 columnas */
+header.top .tabs button{padding:6px 10px;font-size:.72rem}
+@media (max-width:520px){
+  .stats{grid-template-columns:repeat(2,1fr);gap:10px}
+  .stat{padding:12px 14px}
+  .stat b{font-size:1.5rem}
+  .stat span{font-size:.8rem}
+  .stat.grande{padding:18px 16px}
+  .stat.grande b{font-size:2.2rem}
+}

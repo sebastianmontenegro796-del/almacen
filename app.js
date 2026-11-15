@@ -55,7 +55,7 @@ function aplicarTema(id) {
   if (id) document.documentElement.setAttribute('data-theme', id);
   else document.documentElement.removeAttribute('data-theme');
 }
-aplicarTema(ls.get('seba_tema'));
+aplicarTema(ls.get('seba_tema') || 'verde');
 
 const TOPIC = (window.SEBA_CONFIG || {}).topic;
 const API_PATH = '/seba_almacen/api.php';
@@ -185,7 +185,7 @@ $('#btnSalir').onclick = async () => {
 $('#btnReintentar').onclick = () => arrancar(true);
 
 function pintarTemas() {
-  const activo = ls.get('seba_tema') || '';
+  const activo = ls.get('seba_tema') || 'verde';
   $('#temaLista').innerHTML = TEMAS.map(t => `
     <button type="button" class="tema-op${t.id === activo ? ' sel' : ''}" data-tema="${t.id}">
       <span class="tema-dot tema-${t.id}"></span>${esc(t.nombre)}
@@ -209,14 +209,18 @@ function showView(v) {
   document.querySelectorAll('.view').forEach(s => s.classList.toggle('active', s.id === 'view-' + v));
   if (v === 'productos') loadProductos();
   if (v === 'movimientos') loadMovimientos();
+  if (v === 'resumen') loadStats();
 }
 
 /* ---------- Resumen ---------- */
 async function loadStats() {
   const s = await api('resumen');
   $('#stats').innerHTML = `
-    <div class="stat"><b>${s.productos}</b><span>Productos</span></div>
-    <div class="stat"><b>${s.ocupadas}/${s.ubicaciones}</b><span>Ocupadas</span></div>
+    <div class="stat grande">
+      <span>Productos en el almacén</span>
+      <b>${s.productos}</b>
+      <span class="sub">${s.ocupadas}/${s.ubicaciones} ubicaciones ocupadas</span>
+    </div>
     <div class="stat ${s.bajo_stock ? 'alerta' : ''}"><b>${s.bajo_stock}</b><span>Stock bajo</span></div>
     <div class="stat"><b>${s.mov_hoy}</b><span>Mov. hoy</span></div>`;
 }

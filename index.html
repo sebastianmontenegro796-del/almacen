@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest?v=6">
 <link rel="icon" href="icono-perro-192.png">
 <link rel="apple-touch-icon" href="icono-perro-apple.png">
-<link rel="stylesheet" href="style.css?v=16">
+<link rel="stylesheet" href="style.css?v=18">
 </head>
 <body>
 
@@ -45,18 +45,21 @@
   <header class="top">
     <div class="brand"><img src="transpaleta.png" alt="" class="brand-trans"> Almacén MT</div>
     <nav class="tabs">
-      <button data-view="mapa" class="active">Mapa</button>
+      <button data-view="resumen" class="active">Inicio</button>
+      <button data-view="mapa">Mapa</button>
       <button data-view="productos">Productos</button>
       <button data-view="movimientos">Movimientos</button>
+      <button data-view="ajustes">Ajustes</button>
     </nav>
-    <button class="btn sm" id="btnTema" aria-label="Color de la app" title="Color de la app">🎨</button>
-    <button class="btn sm" id="btnSalir">Salir</button>
   </header>
 
   <main>
-    <section class="stats" id="stats"></section>
+    <section id="view-resumen" class="view active">
+      <h2 style="margin:4px 0 14px">Resumen</h2>
+      <section class="stats" id="stats"></section>
+    </section>
 
-    <section id="view-mapa" class="view active">
+    <section id="view-mapa" class="view">
       <div class="search-wrap">
         <button type="button" class="minimapa" id="minimapa" aria-label="Abrir el mapa del almacén"><span class="mm-plano" id="mmPlano"></span><span class="mm-txt"><b>Ver mapa</b><small id="mmInfo"></small></span></button>
         <input id="search" type="search" placeholder="Buscar producto, referencia o ubicación…" autocomplete="off">
@@ -111,6 +114,13 @@
           <thead><tr><th>Fecha</th><th>Producto</th><th>Tipo</th><th>Cant.</th><th>Ubic.</th><th>Nota</th></tr></thead>
           <tbody id="tablaMov"></tbody>
         </table>
+      </div>
+    </section>
+
+    <section id="view-ajustes" class="view">
+      <div style="max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:10px">
+        <button type="button" class="btn ancho" id="btnTema">🎨 Apariencia</button>
+        <button type="button" class="btn ancho danger" id="btnSalir">Salir</button>
       </div>
     </section>
   </main>
@@ -193,7 +203,7 @@
 <script src="config.js"></script>
 <script src="almacen-layout.js?v=1"></script>
 <script src="mapa3d.js?v=5"></script>
-<script src="app.js?v=14"></script>
+<script src="app.js?v=15"></script>
 <script src="catalogo.js?v=1"></script>
 <script src="cargarapida.js?v=1"></script>
 </body>
