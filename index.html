@@ -9,10 +9,10 @@
 <meta name="apple-mobile-web-app-title" content="Almacén MT">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Almacén MT</title>
-<link rel="manifest" href="manifest.webmanifest?v=5">
-<link rel="icon" href="app-icon-192.png">
-<link rel="apple-touch-icon" href="app-apple-touch-icon.png">
-<link rel="stylesheet" href="style.css?v=15">
+<link rel="manifest" href="manifest.webmanifest?v=6">
+<link rel="icon" href="icono-perro-192.png">
+<link rel="apple-touch-icon" href="icono-perro-apple.png">
+<link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
 
@@ -49,6 +49,7 @@
       <button data-view="productos">Productos</button>
       <button data-view="movimientos">Movimientos</button>
     </nav>
+    <button class="btn sm" id="btnTema" aria-label="Color de la app" title="Color de la app">🎨</button>
     <button class="btn sm" id="btnSalir">Salir</button>
   </header>
 
@@ -178,12 +179,22 @@
   </form>
 </dialog>
 
+<!-- Modal color de la app -->
+<dialog id="dlgTema">
+  <h2>Color de la app</h2>
+  <p class="muted" style="margin:0 0 4px">Elige el que más te guste, se aplica al momento.</p>
+  <div class="tema-lista" id="temaLista"></div>
+  <div class="actions">
+    <span class="spacer"></span>
+    <button type="button" class="btn" data-close>Cerrar</button>
+  </div>
+</dialog>
+
 <script src="config.js"></script>
 <script src="almacen-layout.js?v=1"></script>
 <script src="mapa3d.js?v=5"></script>
-<script src="app.js?v=13"></script>
+<script src="app.js?v=14"></script>
 <script src="catalogo.js?v=1"></script>
 <script src="cargarapida.js?v=1"></script>
-<script src="perrito.js?v=4"></script>
 </body>
 </html>

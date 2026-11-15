@@ -43,6 +43,20 @@ const ls = {
   set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} },
 };
 
+/* ---------- Color de la app (tema) ---------- */
+const TEMAS = [
+  {id: 'verde', nombre: 'Verde'},
+  {id: 'vino', nombre: 'Vino tinto'},
+  {id: 'terracota', nombre: 'Terracota'},
+  {id: 'esmeralda', nombre: 'Esmeralda'},
+  {id: 'mono', nombre: 'Mono industrial'},
+];
+function aplicarTema(id) {
+  if (id) document.documentElement.setAttribute('data-theme', id);
+  else document.documentElement.removeAttribute('data-theme');
+}
+aplicarTema(ls.get('seba_tema'));
+
 const TOPIC = (window.SEBA_CONFIG || {}).topic;
 const API_PATH = '/seba_almacen/api.php';
 const TUNEL_RE = /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/;
@@ -169,6 +183,21 @@ $('#btnSalir').onclick = async () => {
   cerrarSesionLocal();
 };
 $('#btnReintentar').onclick = () => arrancar(true);
+
+function pintarTemas() {
+  const activo = ls.get('seba_tema') || '';
+  $('#temaLista').innerHTML = TEMAS.map(t => `
+    <button type="button" class="tema-op${t.id === activo ? ' sel' : ''}" data-tema="${t.id}">
+      <span class="tema-dot tema-${t.id}"></span>${esc(t.nombre)}
+      <span class="tema-check">✓</span>
+    </button>`).join('');
+  $('#temaLista').querySelectorAll('[data-tema]').forEach(b => b.onclick = () => {
+    ls.set('seba_tema', b.dataset.tema);
+    aplicarTema(b.dataset.tema);
+    pintarTemas();
+  });
+}
+$('#btnTema').onclick = () => { pintarTemas(); $('#dlgTema').showModal(); };
 
 /* ---------- Estado de la interfaz ---------- */
 let ubicaciones = [];
