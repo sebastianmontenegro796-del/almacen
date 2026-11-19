@@ -344,13 +344,16 @@ async function showDetail(codigo, scroll = true) {
         <div class="qty ${isLow(p) ? 'low' : ''}">${esc(cantUd(p.cantidad, p.unidad))}${p.referencia ? ' · Ref ' + esc(p.referencia) : ''}${isLow(p) ? ' · stock bajo' : ''}</div>
         ${p.notas ? `<div class="muted" style="font-size:.85rem">${esc(p.notas)}</div>` : ''}
         <div class="btns">
+          ${window.entradaRapida ? `<button class="btn sm ok rapido" data-rapido="${p.id}" title="Entrada rápida, sin formulario">+${esc(cantUd(1, p.unidad))}</button>` : ''}
           <button class="btn sm ok" data-mov="ENTRADA" data-id="${p.id}">+ Entrada</button>
           <button class="btn sm danger" data-mov="SALIDA" data-id="${p.id}">− Salida</button>
           <button class="btn sm" data-edit="${p.id}">Editar / mover</button>
         </div>
       </div>`).join('')}
+    ${window.abrirCargaEn ? `<button class="btn ancho btn-lista-aqui" id="btnListaAqui">⚡ Dictar o pegar lista aquí</button>` : ''}
     <button class="btn primary ancho" id="btnAddHere">+ Añadir producto aquí</button>`;
   det._productos = u.productos;
+  if ($('#btnListaAqui')) $('#btnListaAqui').onclick = () => abrirCargaEn(codigo);
   $('#btnAddHere').onclick = () => openProducto({ubicacion: codigo});
   $('#btnRenombrar').onclick = () => openUbic(u);
   if (scroll && window.innerWidth <= 860) det.scrollIntoView({behavior: 'smooth', block: 'start'});
@@ -358,6 +361,8 @@ async function showDetail(codigo, scroll = true) {
 
 $('#detail').addEventListener('click', e => {
   const prods = $('#detail')._productos || [];
+  const r = e.target.closest('[data-rapido]');
+  if (r) return entradaRapida(prods.find(p => p.id == r.dataset.rapido), r);
   const m = e.target.closest('[data-mov]');
   if (m) return openMov(prods.find(p => p.id == m.dataset.id), m.dataset.mov);
   const ed = e.target.closest('[data-edit]');

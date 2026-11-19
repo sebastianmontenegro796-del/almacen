@@ -17,7 +17,10 @@
     const arriba = m => m ? [m.alto - .1, m.alto + 1.1] : [0, 1.5];
     const rk = MOD('b2'), hN = rk ? rk.alto / rk.baldas : 1;
     // medio = solo la fila justo debajo de la de arriba (no las de más abajo)
-    if (/^F\d+M$/.test(cod)) return rk ? [(rk.baldas - 2) * hN, (rk.baldas - 1) * hN] : [0, 1.5];
+    if (/^F(\d+M|M)$/.test(cod)) return rk ? [(rk.baldas - 2) * hN, (rk.baldas - 1) * hN] : [0, 1.5];
+    // estantería de la derecha del fondo: SS arriba, SM medio, SB abajo
+    const niv = {SB: 0, SM: 1, SS: 2}[cod];
+    if (niv !== undefined) { const m = MOD('s'), h = (m ? m.alto : 2.4) / 3; return [niv * h, niv === 2 ? (m ? m.alto : 2.4) + .3 : (niv + 1) * h]; }
     if (/^F\d+$/.test(cod)) return rk ? [(rk.baldas - 1) * hN, rk.alto + .3] : [0, 1.5];
     if (/^I\d+$/.test(cod)) return arriba(MOD('a'));
     if (/^D\d+$/.test(cod)) return arriba(MOD('d'));
@@ -395,7 +398,16 @@
     lista.forEach(u => {
       let {x, z, w, d} = pos(u);
       // F1 (arriba) y F1M (medio) son el mismo palé a distinta altura: en 3D ocupan todo el fondo del rack
-      const f = /^(F\d+)(M?)$/.exec(u.codigo), par = f && porCodigo[f[2] ? f[1] : f[1] + 'M'];
+      // (FM es un solo hueco medio para todo el fondo; SS/SM/SB son alturas de la misma estantería)
+      const f = /^(F\d+)(M?)$/.exec(u.codigo);
+      let par = f && porCodigo[f[2] ? f[1] : f[1] + 'M'];
+      if (!par && f && !f[2]) par = porCodigo.FM;
+      if (!par && u.codigo === 'FM') par = porCodigo.F1;
+      if (/^S[SMB]$/.test(u.codigo)) {
+        const ps = ['SS', 'SM', 'SB'].map(c => porCodigo[c]).filter(Boolean).map(pos);
+        const z0 = Math.min(...ps.map(p => p.z - p.d / 2)), z1 = Math.max(...ps.map(p => p.z + p.d / 2));
+        z = (z0 + z1) / 2; d = z1 - z0;
+      }
       if (par) { const p = pos(par), z0 = Math.min(z - d / 2, p.z - p.d / 2), z1 = Math.max(z + d / 2, p.z + p.d / 2); z = (z0 + z1) / 2; d = z1 - z0; }
       const n = Number(u.num_productos) || 0;
       const color = u.bajo_stock ? C.warn : n ? C.ok : null;

@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest?v=7">
 <link rel="icon" href="icono-perro-192.png">
 <link rel="apple-touch-icon" href="icono-perro-apple.png">
-<link rel="stylesheet" href="style.css?v=20">
+<link rel="stylesheet" href="style.css?v=23">
 </head>
 <body>
 
@@ -67,6 +67,10 @@
         <button type="button" class="acceso" id="irCatalogo">
           <span class="acc-ic"><svg class="ico" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h7"/></svg></span>
           Catálogo<small>Fotos de productos</small>
+        </button>
+        <button type="button" class="acceso acceso-ancho" id="irBuscar">
+          <span class="acc-ic"><svg class="ico" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8M8 10.5h5M10.5 8v5"/></svg></span>
+          ¿Qué hay y dónde?<small>Pega lo que te falta y te dice en qué ubicación está</small>
         </button>
       </div>
     </section>
@@ -213,11 +217,12 @@
 </dialog>
 
 <script src="config.js"></script>
-<script src="almacen-layout.js?v=1"></script>
-<script src="mapa3d.js?v=5"></script>
-<script src="app.js?v=16"></script>
+<script src="almacen-layout.js?v=4"></script>
+<script src="mapa3d.js?v=6"></script>
+<script src="app.js?v=18"></script>
 <script src="catalogo.js?v=1"></script>
-<script src="cargarapida.js?v=1"></script>
+<script src="cargarapida.js?v=5"></script>
+<script src="buscalista.js?v=2"></script>
 <script>
   // Barra de abajo: ⚡ Carga como botón redondo del centro; Mapa y Catálogo se abren desde Inicio
   (function () {
@@ -230,6 +235,7 @@
     const cat = document.querySelector('.tabs [data-view="catalogo"]');
     document.getElementById('irMapa').onclick = () => showView('mapa');
     document.getElementById('irCatalogo').onclick = () => cat && cat.click();
+    document.getElementById('irBuscar').onclick = () => window.abrirBuscarLista && abrirBuscarLista();
   })();
 </script>
 </body>

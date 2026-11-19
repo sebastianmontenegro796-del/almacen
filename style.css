@@ -412,3 +412,39 @@ header.top .tabs button.btn-central svg.ico{width:30px;height:30px;fill:currentC
 .acceso small{color:var(--muted);font-weight:400;font-size:.8rem;margin-top:-6px}
 .acc-ic{width:40px;height:40px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
 .acc-ic svg.ico{width:24px;height:24px}
+
+/* ---------- ¿Qué hay y dónde? (buscalista.js) ---------- */
+.accesos .acceso-ancho{grid-column:1/-1}
+.bl-filtros{display:flex;gap:6px;margin:10px 0 4px;overflow-x:auto}
+.bl-filtros button{flex:1;border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:999px;padding:7px 10px;font:inherit;font-size:.8rem;font-weight:600;white-space:nowrap}
+.bl-filtros button.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.bl-pide{font-weight:400;color:var(--muted);font-size:.8rem}
+.bl-sitios{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}
+.bl-var{flex-basis:100%;font-size:.78rem;color:var(--text);margin-top:2px}
+.bl-sitio{border:1px solid var(--accent);background:var(--accent-soft);color:var(--text);border-radius:10px;padding:5px 9px;font:inherit;font-size:.8rem;cursor:pointer}
+.bl-sitio b{color:var(--accent);margin-right:2px}
+.bl-sitio.vacio{opacity:.55;border-style:dashed}
+.bl-ruta-tit{font-size:1rem;margin:18px 0 8px}
+.bl-ruta{display:flex;flex-direction:column;gap:8px}
+.bl-parada{display:flex;gap:12px;align-items:flex-start;text-align:left;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:12px;padding:10px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.bl-parada b{min-width:48px;padding:4px 8px;border-radius:8px;background:var(--accent);color:var(--on-accent);text-align:center}
+.bl-parada i{color:var(--muted);font-style:normal}
+
+/* Carga rápida desde un palet: sitio ya puesto */
+.cr-fijo{background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;padding:10px 12px;margin:0 0 10px;display:flex;flex-direction:column;gap:4px}
+.cr-fijo-cab{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.cr-fijo-cab b{font-size:1.05rem}
+.cr-fijo-tipo span{border-color:var(--accent);color:var(--accent);font-size:.9rem;padding:6px 14px}
+.cr-fijo-tipo span.sel{background:var(--accent);color:var(--on-accent)}
+.btn-lista-aqui{margin-top:10px}
+.btn-lista-aqui + .btn.ancho{margin-top:8px}
+/* Botones de productos del sitio (Carga desde palet) */
+.cr-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.cr-chips-tit{width:100%}
+.cr-chip{font:inherit;font-size:.85rem;padding:8px 11px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
+.cr-chip.on{border-color:var(--accent);background:var(--accent);color:var(--on-accent)}
+.cr-chip b{margin-left:4px}
+/* +1 rápido en la ficha del palet y aviso con «Deshacer» */
+.btn.rapido{font-weight:700}
+.toast-deshacer{display:flex;align-items:center;gap:12px}
+.toast-deshacer button{font:inherit;font-weight:700;background:none;border:0;color:var(--accent);cursor:pointer;padding:4px 2px;text-decoration:underline}

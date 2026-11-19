@@ -27,8 +27,15 @@
    <div class="cr" id="crPaso1">
     <h2 class="cr-tit">⚡ Carga rápida</h2>
     <p class="muted cr-sub">Pega la lista de ChatGPT o díctala. Una línea por producto.</p>
+    <div class="cr-fijo" id="crFijo" hidden>
+      <div class="cr-fijo-cab"><span>📍 Todo va a <b id="crFijoCod"></b></span>
+        <button type="button" class="btn sm link" id="crFijoQuitar">Quitar</button></div>
+      <div class="cr-elige cr-fijo-tipo"><span data-def="SALIDA">− Sale</span><span data-def="ENTRADA">+ Entra</span></div>
+      <small class="muted">Solo di producto y cantidad: «Kinder Bueno 3 cajas».</small>
+      <div class="cr-chips" id="crChips" hidden></div>
+    </div>
     <textarea id="crTexto" class="cr-texto" spellcheck="false" autocomplete="off"
-      placeholder="+ F4 Kinder Bueno 3 cajas&#10;+ F5 Pictolín 2 cajas&#10;- S1 Happy Party 1 palé"></textarea>
+      placeholder="+ F4 Kinder Bueno 3 cajas&#10;+ FM Bom Bom Bum fresa 2 cajas&#10;- SS Tortolines sal 1 caja"></textarea>
     <div class="cr-escucha" id="crEscucha" hidden><span class="cr-ondas" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
       <span>Escuchando… <i id="crParcial"></i></span></div>
     <div class="cr-fila">
@@ -38,7 +45,7 @@
     <button type="button" class="btn primary cr-big cr-ancho" id="crRevisar">Revisar →</button>
     <div class="cr-ayuda">
       <b>+</b> entra · <b>−</b> sale · luego <b>sitio</b>, <b>producto</b> y <b>cantidad</b>.<br>
-      Por voz: «entra F4 Kinder Bueno 3 cajas», «sale S1 Happy Party 1 palé».
+      Por voz: «entra F4 Kinder Bueno 3 cajas», «sale ese ese Tortolines sal 1 caja».
       <div class="cr-ayuda-btns">
         <button type="button" class="btn sm" id="crCopiarGPT">Copiar instrucciones para ChatGPT</button>
         <button type="button" class="btn sm link" id="crBorrar">Vaciar</button>
@@ -66,6 +73,7 @@
       <div class="cr-hecho" id="crHecho"></div>
       <p class="muted cr-nota">También queda apuntado en Movimientos.</p>
       <button type="button" class="btn primary cr-big cr-ancho" id="crOtra">Hacer otra carga</button>
+      <button type="button" class="btn cr-big cr-ancho" id="crVolverSitio" hidden></button>
     </div>
    </div>`;
   document.querySelector('main').appendChild(vista);
@@ -75,9 +83,104 @@
   txt.addEventListener('input', () => guardarBorrador(txt.value));
   function paso(n) {
     [1, 2, 3].forEach(i => { $('#crPaso' + i).hidden = i !== n; });
+    if (n === 1 && chips.length) pintarChips();
     window.scrollTo({top: 0, behavior: 'smooth'});
   }
-  tab.onclick = () => { showView('carga'); if (!$('#crPaso3').hidden) paso(1); };
+  tab.onclick = () => { showView('carga'); fijar(null); if (!$('#crPaso3').hidden) paso(1); };
+
+  /* ---------- Modo «desde un palet»: el sitio ya viene puesto ---------- */
+  let sitioFijo = null, tipoDef = 'SALIDA';
+  const PH_NORMAL = txt.placeholder, PH_FIJO = 'Kinder Bueno 3 cajas\nTortolines sal 1 caja\n(o con + / − delante para cambiar entra o sale)';
+  function fijar(cod, tipo) {
+    sitioFijo = cod || null;
+    if (tipo) tipoDef = tipo;
+    $('#crFijo').hidden = !sitioFijo;
+    $('#crFijoCod').textContent = sitioFijo || '';
+    txt.placeholder = sitioFijo ? PH_FIJO : PH_NORMAL;
+    $('#crFijo').querySelectorAll('[data-def]').forEach(s => s.classList.toggle('sel', s.dataset.def === tipoDef));
+    const v = $('#crVolverSitio'); v.hidden = !sitioFijo; v.textContent = sitioFijo ? `← Volver a ${sitioFijo}` : '';
+    if (cod !== chipsDe) cargarChips();
+  }
+
+  /* ---------- Botones con los productos de ese sitio: cada toque suma 1 a su línea ---------- */
+  let chips = [], chipsDe = null;
+  const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const reLinea = p => new RegExp('^(\\s*(?:[+＋−–—-]\\s*)?)' + escRe(p.nombre) + '\\s+(\\d+(?:[.,]\\d+)?)\\b.*$', 'i');
+  const textoCant = (p, n) => unidadNorm(p.unidad) ? cantUd(n, p.unidad) : fmt(n);   // si la unidad es rara, solo el número
+  async function cargarChips() {
+    chipsDe = sitioFijo; chips = [];
+    $('#crChips').hidden = true; $('#crChips').innerHTML = '';
+    if (!sitioFijo) return;
+    try {
+      const pedido = sitioFijo;
+      const todos = await api('productos');
+      if (pedido !== sitioFijo) return;
+      chips = todos.filter(p => p.ubicacion === sitioFijo).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+      pintarChips();
+    } catch {}
+  }
+  function cuentaEnTexto(p) {
+    const re = reLinea(p);
+    for (const l of txt.value.split('\n')) { const m = l.match(re); if (m) return Number(m[2].replace(',', '.')); }
+    return 0;
+  }
+  function pintarChips() {
+    const box = $('#crChips');
+    box.hidden = !chips.length;
+    box.innerHTML = chips.length ? '<small class="muted cr-chips-tit">Toca para sumar 1:</small>' + chips.map((p, i) => {
+      const n = cuentaEnTexto(p);
+      return `<button type="button" class="cr-chip${n ? ' on' : ''}" data-chip="${i}">${esc(p.nombre)}${n ? ` <b>${fmt(n)}</b>` : ''}</button>`;
+    }).join('') : '';
+  }
+  $('#crChips').addEventListener('click', e => {
+    const b = e.target.closest('[data-chip]'); if (!b) return;
+    const p = chips[+b.dataset.chip], re = reLinea(p);
+    const lineas = txt.value.trim() ? txt.value.trimEnd().split('\n') : [];
+    const i = lineas.findIndex(l => re.test(l));
+    if (i >= 0) { const m = lineas[i].match(re); lineas[i] = m[1] + p.nombre + ' ' + textoCant(p, Number(m[2].replace(',', '.')) + 1); }
+    else lineas.push(p.nombre + ' ' + textoCant(p, 1));
+    txt.value = lineas.join('\n'); guardarBorrador(txt.value);
+    if (navigator.vibrate) navigator.vibrate(15);
+    pintarChips();
+  });
+  txt.addEventListener('input', () => { if (chips.length) pintarChips(); });
+
+  /* ---------- Entrada rápida desde la ficha del palet: +1 sin formulario, con «Deshacer» ---------- */
+  window.entradaRapida = async (p, btn) => {
+    if (!p) return;
+    if (btn) btn.disabled = true;
+    try {
+      await api('movimiento', {}, {id: p.id, tipo: 'ENTRADA', cantidad: 1, nota: 'Entrada rápida'});
+      if (navigator.vibrate) navigator.vibrate(30);
+      avisoDeshacer(`${p.nombre} +${cantUd(1, p.unidad)}`, async () => {
+        await api('movimiento', {}, {id: p.id, tipo: 'SALIDA', cantidad: 1, nota: 'Deshacer entrada rápida'});
+        toast('Deshecho'); refresh();
+      });
+      refresh();
+    } catch (err) { toast(err.message); if (btn) btn.disabled = false; }
+  };
+  function avisoDeshacer(msg, fn) {
+    document.querySelectorAll('.toast-deshacer').forEach(t => t.remove());
+    const t = document.createElement('div');
+    t.className = 'toast toast-deshacer';
+    t.innerHTML = `<span>✓ ${esc(msg)}</span><button type="button">Deshacer</button>`;
+    t.querySelector('button').onclick = () => { t.remove(); fn().catch(err => toast(err.message)); };
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 6000);
+  }
+  $('#crFijo').addEventListener('click', e => { const s = e.target.closest('[data-def]'); if (s) fijar(sitioFijo, s.dataset.def); });
+  $('#crFijoQuitar').onclick = () => fijar(null);
+  $('#crVolverSitio').onclick = () => {
+    const cod = sitioFijo;
+    showView('mapa'); if (typeof ponerMapa === 'function') ponerMapa(true);
+    if (cod) showDetail(cod);
+  };
+  // Se abre desde la ficha de un palet / ubicación
+  window.abrirCargaEn = (cod, tipo) => {
+    chipsDe = undefined;   // vuelve a leer los productos del sitio (por si hay alguno nuevo)
+    showView('carga'); fijar(cod, tipo || 'SALIDA'); paso(1);
+    setTimeout(() => txt.focus(), 300);
+  };
 
   /* ---------- Leer cada línea ---------- */
   const NUM = {dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10, once: 11, doce: 12,
@@ -89,14 +192,25 @@
   const RELLENO = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'en', 'a', 'al', 'y', 'con', 'x', 'por', 'ubicacion', 'sitio', 'hueco']);
   let codigos = new Set();
 
+  // Dónde empieza otro producto aunque venga todo en una sola línea (como lo pega a veces ChatGPT):
+  //  «… 6 cajas + F1M …», «… 6 cajas - S1 …», «… 3 cajas entra F4 …», «…, y sale …», «1. … 2. …»
+  const SITIO = '(?:(?:est\\w*|[fidspe])\\s*-?\\d{1,2}m?|fm|s[smb])\\b';
+  const CORTE = new RegExp(
+    '\\s*(?:,|;|\\by\\b)\\s+(?=(?:entra[n]?|sale[n]?|saca[n]?|mete[n]?|quita[n]?)\\b)' +
+    '|\\s+(?=[+＋−–—-]\\s*' + SITIO + ')' +
+    '|\\s+(?=(?:entra[n]?|sale[n]?|saca[n]?|mete[n]?|quita[n]?)\\s)' +
+    '|\\s+(?=\\d{1,2}[.)]\\s+(?:[+＋−–—-]|entra|sale|saca|mete|quita|' + SITIO + '))', 'i');
   function partirLineas(texto) {
     const out = [];
-    texto.split(/\r?\n/).forEach(l => {
-      // «… y sale …» dicho de corrido se parte en dos líneas
-      l.split(/\s*(?:,|;|\by\b)\s+(?=(?:entra[n]?|sale[n]?|saca|mete|quita)\b)/i).forEach(x => {
-        x = x.replace(/^\s*(?:[•*·]|\d+[.)])\s+/, '').trim();
-        if (x && !x.startsWith('#')) out.push(x);
-      });
+    texto.replace(/\\([-+*_#.()!\[\]])/g, '$1')        // ChatGPT a veces escribe «\+» y «\-»
+      .split(/\r\n|\r|\n|\u2028|\u2029/).forEach(l => {
+      let trozos = l.split(CORTE).map(x => x.replace(/^\s*(?:[•*·]|\d+[.)])\s+/, '').replace(/\*\*/g, '').trim()).filter(x => x && !/^\d+[.)]?$/.test(x));
+      // si un trozo no tiene ningún número, no era otro producto: se vuelve a pegar al anterior
+      trozos = trozos.reduce((a, x) => {
+        if (a.length && !/\d/.test(x) && !/^[+＋−–—-]/.test(x)) a[a.length - 1] += ' ' + x; else a.push(x);
+        return a;
+      }, []);
+      trozos.forEach(x => { if (x && !x.startsWith('#')) out.push(x); });
     });
     return out;
   }
@@ -112,9 +226,21 @@
       for (const m of s.matchAll(re)) {
         let pre = norm(m[1]);
         pre = pre.startsWith('est') ? 'EST' : (LETRA[pre] || pre.toUpperCase());
-        const cod = pre + Number(m[2]) + (m[3] ? 'M' : '');
+        let cod = pre + Number(m[2]) + (m[3] ? 'M' : '');
+        if (!codigos.has(cod) && /^F\d+M$/.test(cod) && codigos.has('FM')) cod = 'FM';  // los antiguos F1M–F6M ahora son FM
         if (codigos.has(cod)) return {cod, resto: (s.slice(0, m.index) + ' ' + s.slice(m.index + m[0].length)).trim()};
       }
+    }
+    // 3) ubicaciones sin número: FM (fondo medio) y SS / SM / SB (derecha del fondo, arriba / medio / abajo)
+    //    también dichas: «efe eme», «ese ese», «ese eme», «ese be»
+    const SIN_NUM = [
+      [/(?:^|[\s,:;(])(fm|ss|sm|sb)(?=$|[\s,.;:)])/i, m => m[1].toUpperCase()],
+      [/(?:^|[\s,:;(])(efe\s+eme|ese\s+ese|ese\s+eme|ese\s+be)(?=$|[\s,.;:)])/i,
+        m => ({'efe eme': 'FM', 'ese ese': 'SS', 'ese eme': 'SM', 'ese be': 'SB'})[norm(m[1]).replace(/\s+/g, ' ')]],
+    ];
+    for (const [re, a] of SIN_NUM) {
+      const m = s.match(re);
+      if (m && codigos.has(a(m))) return {cod: a(m), resto: (s.slice(0, m.index) + ' ' + s.slice(m.index + m[0].length)).trim()};
     }
     return {cod: null, resto: s};
   }
@@ -178,6 +304,7 @@
   function preparar(productos) {
     items = partirLineas(txt.value).map(raw => {
       const l = leerLinea(raw);
+      if (sitioFijo) { if (!l.ubic) l.ubic = sitioFijo; if (!l.tipo) l.tipo = tipoDef; }
       const it = {...l, opciones: [], sel: -1, fijo: null, aviso: ''};
       const cands = candidatos(l, productos);
       const enSitio = l.ubic ? cands.filter(c => c.p.ubicacion === l.ubic) : cands;
@@ -332,14 +459,17 @@
   $('#crBorrar').onclick = () => {
     if (txt.value.trim() && !confirm('¿Vaciar el cuadro?')) return;
     txt.value = ''; guardarBorrador(''); txt.focus();
+    if (chips.length) pintarChips();
   };
   $('#crCopiarGPT').onclick = async () => {
-    const prompt = 'Pásame la lista para mi almacén con este formato exacto, una línea por producto y sin nada más:\n' +
+    const prompt = 'Pásame la lista para mi almacén dentro de un bloque de código (texto plano), con este formato exacto, ' +
+      'CADA PRODUCTO EN SU PROPIA LÍNEA, sin viñetas, sin negritas, sin barras invertidas y sin nada más:\n' +
       '+ UBICACIÓN PRODUCTO CANTIDAD UNIDAD   (para lo que entra)\n' +
       '- UBICACIÓN PRODUCTO CANTIDAD UNIDAD   (para lo que sale)\n' +
-      'Ubicaciones válidas: F1–F6 (fondo arriba), F1M–F6M (fondo medio), I1–I19, D1–D15, EST1–EST6, S1–S3, P1–P3, E1–E2.\n' +
+      'Ubicaciones válidas: F1–F6 (fondo arriba), FM (fondo medio), I1–I19, D1–D15, EST1–EST6, ' +
+      'SS / SM / SB (derecha del fondo: arriba / medio / abajo), P1–P3, E1–E2.\n' +
       'Unidades: palé, medio palé, fila, caja, unidad.\n' +
-      'Ejemplo:\n+ F4 Kinder Bueno 3 cajas\n- S1 Happy Party 1 palé';
+      'Ejemplo:\n+ F4 Kinder Bueno 3 cajas\n- SS Tortolines sal 1 caja';
     try { await navigator.clipboard.writeText(prompt); toast('Copiado. Pégalo en ChatGPT junto a tu lista'); }
     catch { alert(prompt); }
   };
